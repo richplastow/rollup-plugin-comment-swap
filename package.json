@@ -16,8 +16,8 @@
     "node": ">=14.0.0"
   },
   "scripts": {
-  	"build": "rollup -c",
-  	"test": "ava"
+    "build": "rollup -c",
+    "test": "ava"
   },
   "files": [
     "dist",
@@ -36,10 +36,11 @@
     "replace"
   ],
   "devDependencies": {
-  	"@rollup/plugin-typescript": "^9.0.1",
-  	"ava": "^5.1.0",
-  	"rollup": "^3.2.3",
-  	"tslib": "^2.4.1",
-  	"typescript": "^4.8.3"
+    "@rollup/plugin-typescript": "^9.0.1",
+    "ava": "^5.1.0",
+    "rollup": "^3.2.3",
+    "rollup-plugin-cleanup": "^3.2.1",
+    "tslib": "^2.4.1",
+    "typescript": "^4.8.3"
   }
 }

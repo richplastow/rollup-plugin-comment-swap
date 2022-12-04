@@ -1,6 +1,7 @@
 import type { Plugin } from 'rollup';
 
 export interface RollupCommentSwapOptions {
+    quick?: Boolean
 }
 
 /**

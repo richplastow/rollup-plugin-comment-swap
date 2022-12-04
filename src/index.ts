@@ -1,19 +1,24 @@
-import type { Plugin, PluginContext } from 'rollup';
-
+import type { Plugin } from 'rollup';
 import type { RollupCommentSwapOptions } from '../types';
 
+import quick from './quick';
+import slow from './slow';
+
 export default function commentSwap(opts: RollupCommentSwapOptions = {}): Plugin {
-  let input: string;
+  opts = {
+    quick: true,
+    ...opts,
+  };
 
   return {
     // `name` is used by Rollup for error messages and warnings.
     name: 'commentSwap',
 
     transform(
-      source, // the string code of a given file
-      id, // the string path that was used to import the module, eg './utilities.js'
+      code, // the source code of a given file, as a string
+      _id, // the path that was used to import the module, as a string, eg './utilities.js'
     ) {
-      return source + '\n\n// ok!';
+      return opts.quick ? quick(code) : slow(code);
     }
   };
 }

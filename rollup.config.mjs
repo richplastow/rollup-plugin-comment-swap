@@ -1,5 +1,7 @@
 import { readFileSync } from 'fs';
 
+import cleanup from 'rollup-plugin-cleanup';
+
 // eslint-disable-next-line import/no-extraneous-dependencies
 import typescript from '@rollup/plugin-typescript';
 
@@ -34,7 +36,10 @@ export default {
       sourcemap: true
     }
   ],
-  plugins: [typescript({ sourceMap: true })]
+  plugins: [
+    typescript({ sourceMap: true }),
+    cleanup(), // remove MS (c) notices, and generally tidy things up
+  ]
 };
 
 function emitModulePackageFile() {
