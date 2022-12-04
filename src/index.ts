@@ -5,6 +5,7 @@ import type { RollupCommentSwapOptions } from '../types';
 
 import quick from './quick';
 import slow from './slow';
+import { pathToFiletype } from './utils';
 
 export default function commentSwap(opts: RollupCommentSwapOptions = {}): Plugin {
   opts = {
@@ -18,9 +19,14 @@ export default function commentSwap(opts: RollupCommentSwapOptions = {}): Plugin
 
     transform(
       code, // the source code of a given file, as a string
-      _id, // the path that was used to import the module, as a string, eg './utilities.js'
+      id, // the path that was used to import the module, as a string, eg './utilities.js'
     ) {
-      const filetype = Filetype.Css;
+      const filetype = pathToFiletype(id);
+
+      // pathToFiletype() will return `Other` if `id` is not an extension we
+      // can transform. Returning `null` tells Rollup that this file does not
+      // need to be transformed.
+      if (filetype === Filetype.Other) return null;
 
       return opts.quick ? quick(code, filetype) : slow(code);
     }
