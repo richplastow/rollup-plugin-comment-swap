@@ -7,9 +7,12 @@ test('Plugin name', t => {
 	t.is(commentSwap().name, 'commentSwap');
 });
 
-test('quick passes', t => {
-	t.is(commentSwap().transform('abc'), 'abc\n\n// @TODO quick');
-	t.is(commentSwap({ quick:true }).transform('abc'), 'abc\n\n// @TODO quick');
+test('quickCss() passes', t => {
+	const code = 'abc';
+	const id = 'foo.css';
+	const expected = 'abc\n\n// @TODO quickCss';
+	t.is(commentSwap().transform(code, id), expected);
+	t.is(commentSwap({ quick:true }).transform(code, id), expected);
 });
 
 test('slow passes', t => {

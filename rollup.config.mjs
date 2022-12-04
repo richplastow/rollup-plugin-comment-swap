@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import cleanup from 'rollup-plugin-cleanup';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-import typescript from '@rollup/plugin-typescript';
+import typescript from 'rollup-plugin-typescript2';
 
 const pkg = JSON.parse(
   readFileSync(new URL('./package.json', import.meta.url), 'utf8')

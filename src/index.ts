@@ -1,3 +1,5 @@
+import Filetype from './types/filetype';
+
 import type { Plugin } from 'rollup';
 import type { RollupCommentSwapOptions } from '../types';
 
@@ -18,7 +20,9 @@ export default function commentSwap(opts: RollupCommentSwapOptions = {}): Plugin
       code, // the source code of a given file, as a string
       _id, // the path that was used to import the module, as a string, eg './utilities.js'
     ) {
-      return opts.quick ? quick(code) : slow(code);
+      const filetype = Filetype.Css;
+
+      return opts.quick ? quick(code, filetype) : slow(code);
     }
   };
 }
