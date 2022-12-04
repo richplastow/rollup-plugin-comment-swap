@@ -1,10 +1,14 @@
 const test = require('ava');
+// const { rollup } = require('rollup');
 
-test('foo', t => {
-	t.pass();
+const commentSwap = require('..');
+
+test('pass', t => {
+	t.is(commentSwap().name, 'commentSwap');
+	t.is(commentSwap().transform('abc'), 'abc\n\n// ok!');
 });
 
-test('bar', async t => {
-	const bar = Promise.resolve('bar');
-	t.is(await bar, 'bar');
+test('fail', async t => {
+	const foo = Promise.resolve('foo');
+	t.is(await foo, 'foo');
 });
