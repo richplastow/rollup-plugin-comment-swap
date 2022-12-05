@@ -1,11 +1,11 @@
-import CommentSwap from '../types/CommentSwap';
+import CommentSwapCss from '../types/CommentSwapCss';
 import CSKind from '../types/CommentSwapKind';
 
-export default function quickCss(code: String) {
-    // Initialise `commentSwaps`, which will contain each CommentSwap instance.
+export default function quickCss(code: string) {
+    // Initialise `commentSwaps`, which will contain each CommentSwapCss instance.
     // Initialise `pos`, the current character position in `code`.
     // Get `len`, the number of characters in `code`.
-    const commentSwaps: CommentSwap[] = [];
+    const commentSwaps: CommentSwapCss[] = [];
     let pos = 0;
     const len = code.length;
 
@@ -53,15 +53,67 @@ export default function quickCss(code: String) {
         }
 
         // Record the Comment Swap.
-        commentSwaps.push(new CommentSwap(
+        commentSwaps.push(new CommentSwapCss(
             commentBegin,
             commentEnd,
             kind,
+            code,
         ));
 
     }
 
-    // console.log(commentSwaps+'')
+    // If there are no valid Comment Swaps, return the source code untransformed.
+    if (commentSwaps.length === 0)
+        return code;
 
-    return `${code}\n\n// @TODO quickCss`;
+    // Initialise an array, which will be output as a string.
+    const transformedCode = [
+        code.slice(0, commentSwaps[0].swapBegin), // before the first Comment Swap
+    ];
+
+    // Rebuild the source code with either the truthy or falsey code from each
+    // Comment Swap.
+    for (let i=0, len=commentSwaps.length; i<len; i++) {
+        const commentSwap = commentSwaps[i];
+
+        switch (commentSwap.kind) {
+            case CSKind.LiteralBefore:
+                transformedCode.push(commentSwap.replacement);
+                break;
+        }
+
+        if (i !== commentSwaps.length-1) {
+            // Append the code between this Comment Swap and the next one.
+            transformedCode.push(
+                code.slice(commentSwaps[i].swapEnd, commentSwaps[i+1].swapBegin)
+            );
+        } else {
+            // Append the remaining code after the last Comment Swap.
+            transformedCode.push(
+                code.slice(commentSwaps[i].swapEnd)
+            );
+        }
+
+/*
+        const condition = commentPair.condition.source;
+        const isTruthy = options[condition];
+        console.log(condition, 'is', isTruthy?'truthy':'falsey', commentPair);
+        transformedCode.push(
+            isTruthy
+            ? commentPair.truthy.source
+            : commentPair.falsey.source
+        );
+        transformedCode.push(
+            source.slice(
+                commentPair.falsey.end,
+                i === len-1 ? source.length : commentSwaps[i+1].condition.begin
+            )
+        );
+*/
+    }
+
+    console.log(commentSwaps+'')
+    console.log(transformedCode.join(''));
+
+    return transformedCode.join('');
 }

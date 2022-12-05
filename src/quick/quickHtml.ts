@@ -1,3 +1,3 @@
-export default function quickHtml(code: String) {
+export default function quickHtml(code: string) {
     return `${code}\n\n// @TODO quickHtml`;
 }

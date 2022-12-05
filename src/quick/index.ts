@@ -5,7 +5,7 @@ import quickHtml from './quickHtml';
 import quickJs from './quickJs';
 
 export default function quick(
-    code: String,
+    code: string,
     filetype: Filetype,
 ) {
     switch (filetype) {

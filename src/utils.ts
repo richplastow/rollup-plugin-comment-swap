@@ -21,7 +21,7 @@ export function pathToFiletype(
 //     /*=   =*/   /*$   $*/   ?*/   /*:
 // At least one of these will be present in a CSS or JS file which uses Comment Swaps.
 export function codeContainsCssJsCommentSwap(
-    code: String
+    code: string
 ): Boolean {
     for (const str of ['/*=', '=*/', '/*$', '$*/', '?*/', '/*:'])
         if (code.indexOf(str) !== -1)
@@ -33,7 +33,7 @@ export function codeContainsCssJsCommentSwap(
 //     <!--=   =-->   <!--$   $-->   ?-->   <!--:
 // At least one of these will be present in an HTML file which uses Comment Swaps.
 export function codeContainsHtmlCommentSwap(
-    code: String
+    code: string
 ): Boolean {
     for (const str of ['<!--=', '=-->', '<!--$', '$-->', '?-->', '<!--:'])
         if (code.indexOf(str) !== -1)
