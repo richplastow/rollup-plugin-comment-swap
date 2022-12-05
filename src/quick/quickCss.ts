@@ -1,24 +1,5 @@
+import CommentSwap from '../types/CommentSwap';
 import CommentSwapKind from '../types/CommentSwapKind';
-
-class CommentSwap {
-    commentBegin: Number;
-    commentEnd: Number;
-    kind: CommentSwapKind;
-
-    constructor(
-        commentBegin: Number,
-        commentEnd: Number,
-        kind: CommentSwapKind,
-    ) {
-        this.commentBegin = commentBegin;
-        this.commentEnd = commentEnd;
-        this.kind = kind;
-    }
-
-    toString() {
-        return `${CommentSwapKind[this.kind]} ${this.commentBegin}-${this.commentEnd}`
-    }
-}
 
 export default function quickCss(code: String) {
     // Initialise `commentSwaps`, which will contain each CommentSwap instance.
@@ -47,35 +28,35 @@ export default function quickCss(code: String) {
         // Determine the kind of Comment Swap.
         const charBeforeCommentEnd = code[commentEnd-3];
         const charAfterCommentBegin = code[commentBegin+2];
-        let commentSwapKind = CommentSwapKind.Absent;
+        let kind = CommentSwapKind.Absent;
         switch (charAfterCommentBegin) {
             case '=':
-                commentSwapKind = CommentSwapKind.LiteralBefore; break;
+                kind = CommentSwapKind.LiteralBefore; break;
             case '$':
-                commentSwapKind = CommentSwapKind.VariableBefore; break;
+                kind = CommentSwapKind.VariableBefore; break;
             case ':':
-                commentSwapKind = CommentSwapKind.TernaryIfFalse; break;
+                kind = CommentSwapKind.TernaryIfFalse; break;
         }
         switch (charBeforeCommentEnd) {
             case '=':
-                if (commentSwapKind !== CommentSwapKind.Absent) throw Error(
-                    `'${commentSwapKind}' Comment Swap ends '=' (pos ${commentBegin})`);
-                commentSwapKind = CommentSwapKind.LiteralAfter; break;
+                if (kind !== CommentSwapKind.Absent) throw Error(
+                    `'${kind}' Comment Swap ends '=' (pos ${commentBegin})`);
+                kind = CommentSwapKind.LiteralAfter; break;
             case '$':
-                if (commentSwapKind !== CommentSwapKind.Absent) throw Error(
-                    `'${commentSwapKind}' Comment Swap ends '$' (pos ${commentBegin})`);
-                commentSwapKind = CommentSwapKind.VariableAfter; break;
+                if (kind !== CommentSwapKind.Absent) throw Error(
+                    `'${kind}' Comment Swap ends '$' (pos ${commentBegin})`);
+                kind = CommentSwapKind.VariableAfter; break;
             case '?':
-                if (commentSwapKind !== CommentSwapKind.Absent) throw Error(
-                    `'${commentSwapKind}' Comment Swap ends '?' (pos ${commentBegin})`);
-                commentSwapKind = CommentSwapKind.TernaryCondition; break;
+                if (kind !== CommentSwapKind.Absent) throw Error(
+                    `'${kind}' Comment Swap ends '?' (pos ${commentBegin})`);
+                kind = CommentSwapKind.TernaryCondition; break;
         }
 
         // Record the Comment Swap.
         commentSwaps.push(new CommentSwap(
             commentBegin,
             commentEnd,
-            commentSwapKind,
+            kind,
         ));
 
     }
