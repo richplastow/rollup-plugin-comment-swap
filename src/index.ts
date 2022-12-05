@@ -5,7 +5,11 @@ import type { RollupCommentSwapOptions } from '../types';
 
 import quick from './quick';
 import slow from './slow';
-import { pathToFiletype } from './utils';
+import {
+  codeContainsCssJsCommentSwap,
+  codeContainsHtmlCommentSwap,
+  pathToFiletype,
+} from './utils';
 
 export default function commentSwap(opts: RollupCommentSwapOptions = {}): Plugin {
   opts = {
@@ -27,6 +31,17 @@ export default function commentSwap(opts: RollupCommentSwapOptions = {}): Plugin
       // can transform. Returning `null` tells Rollup that this file does not
       // need to be transformed.
       if (filetype === Filetype.Other) return null;
+
+      // Only process HTML files which contain at least one of these strings:
+      //     <!--=   =-->   <!--$   $-->   ?-->   <!--:
+      // Only process CSS and JS files which contain at least one of these strings:
+      //     /*=   =*/   /*$   $*/   ?*/   /*:
+      // At least one of these will be present if the file uses Comment Swaps.
+      if (filetype === Filetype.Html) {
+        if (! codeContainsHtmlCommentSwap(code)) return null;
+      } else {
+        if (! codeContainsCssJsCommentSwap(code)) return null;
+      }
 
       return opts.quick ? quick(code, filetype) : slow(code);
     }

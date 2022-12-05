@@ -16,3 +16,27 @@ export function pathToFiletype(
 
     return Filetype.Other;
 }
+
+// Test whether source code contains at least one of the following six strings:
+//     /*=   =*/   /*$   $*/   ?*/   /*:
+// At least one of these will be present in a CSS or JS file which uses Comment Swaps.
+export function codeContainsCssJsCommentSwap(
+    code: String
+): Boolean {
+    for (const str of ['/*=', '=*/', '/*$', '$*/', '?*/', '/*:'])
+        if (code.indexOf(str) !== -1)
+            return true;
+    return false;
+}
+
+// Test whether source code contains at least one of the following six strings:
+//     <!--=   =-->   <!--$   $-->   ?-->   <!--:
+// At least one of these will be present in an HTML file which uses Comment Swaps.
+export function codeContainsHtmlCommentSwap(
+    code: String
+): Boolean {
+    for (const str of ['<!--=', '=-->', '<!--$', '$-->', '?-->', '<!--:'])
+        if (code.indexOf(str) !== -1)
+            return true;
+    return false;
+}

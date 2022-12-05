@@ -8,37 +8,44 @@ test('Plugin name', t => {
 });
 
 test('quickCss() passes', t => {
-	const code = 'abc';
+	const boringCode = 'abc';
+	const funCode = 'abc /*=';
 	const id = 'style.css';
-	const expected = 'abc\n\n// @TODO quickCss';
-	t.is(commentSwap().transform(code, id), expected);
-	t.is(commentSwap({ quick:true }).transform(code, id), expected);
+	const expected = 'abc /*=\n\n// @TODO quickCss';
+
+	t.is(commentSwap({ quick:true }).transform(boringCode, id), null);
+	t.is(commentSwap().transform(funCode, id), expected); // defaults to `quick:true`
+	t.is(commentSwap({ quick:true }).transform(funCode, id), expected);
 });
 
 test('quickHtml() passes', t => {
-	const code = 'abc';
-	const idLong = 'some/path/page.HtMl';
-	const idShort = 'some/path/page.htm';
-	const expected = 'abc\n\n// @TODO quickHtml';
-	t.is(commentSwap().transform(code, idLong), expected);
-	t.is(commentSwap().transform(code, idShort), expected);
+	const boringCode = 'abc';
+	const funCode = 'abc $-->';
+	const idLongExt = 'some/path/page.HtMl';
+	const idShortExt = 'some/path/page.htm';
+	const expected = 'abc $-->\n\n// @TODO quickHtml';
+
+	t.is(commentSwap().transform(boringCode, idLongExt), null);
+	t.is(commentSwap().transform(funCode, idLongExt), expected);
+	t.is(commentSwap().transform(funCode, idShortExt), expected);
 });
 
 test('quickJs() passes', t => {
-	const code = 'abc';
+	const boringCode = 'abc';
+	const funCode = '?*/ abc';
 	const id = 'some/library/script.js';
-	const expected = 'abc\n\n// @TODO quickJs';
-	t.is(commentSwap().transform(code, id), expected);
+	const expected = '?*/ abc\n\n// @TODO quickJs';
+
+	t.is(commentSwap().transform(boringCode, id), null);
+	t.is(commentSwap().transform(funCode, id), expected);
 });
 
 test('slow passes', t => {
-	const code = 'abc';
-	const id = 'foo.css';
-	const expected = 'abc\n\n// @TODO slow';
-	t.is(commentSwap({ quick:false }).transform(code, id), expected);
-});
+	const boringCode = 'abc';
+	const funCode = 'abc =*/';
+	const id = 'foo.js';
+	const expected = 'abc =*/\n\n// @TODO slow';
 
-test('fail', async t => {
-	const foo = Promise.resolve('foo');
-	t.is(await foo, 'foo');
+	t.is(commentSwap({ quick:false }).transform(boringCode, id), null);
+	t.is(commentSwap({ quick:false }).transform(funCode, id), expected);
 });
