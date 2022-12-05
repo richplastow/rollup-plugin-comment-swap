@@ -8,10 +8,10 @@ test('Plugin name', t => {
 });
 
 test('quickCss() passes', t => {
-	const boringCode = 'abc';
-	const funCode = 'abc /*=';
+	const boringCode = 'foo()';
+	const funCode = 'foo() /*= bar() */';
 	const id = 'style.css';
-	const expected = 'abc /*=\n\n// @TODO quickCss';
+	const expected = 'foo() /*= bar() */\n\n// @TODO quickCss';
 
 	t.is(commentSwap({ quick:true }).transform(boringCode, id), null);
 	t.is(commentSwap().transform(funCode, id), expected); // defaults to `quick:true`
