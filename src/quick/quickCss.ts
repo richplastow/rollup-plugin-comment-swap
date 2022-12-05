@@ -1,5 +1,5 @@
 import CommentSwap from '../types/CommentSwap';
-import CommentSwapKind from '../types/CommentSwapKind';
+import CSKind from '../types/CommentSwapKind';
 
 export default function quickCss(code: String) {
     // Initialise `commentSwaps`, which will contain each CommentSwap instance.
@@ -28,28 +28,28 @@ export default function quickCss(code: String) {
         // Determine the kind of Comment Swap.
         const charBeforeCommentEnd = code[commentEnd-3];
         const charAfterCommentBegin = code[commentBegin+2];
-        let kind = CommentSwapKind.Absent;
+        let kind = CSKind.Absent;
         switch (charAfterCommentBegin) {
             case '=':
-                kind = CommentSwapKind.LiteralBefore; break;
+                kind = CSKind.LiteralBefore; break;
             case '$':
-                kind = CommentSwapKind.VariableBefore; break;
+                kind = CSKind.VariableBefore; break;
             case ':':
-                kind = CommentSwapKind.TernaryIfFalse; break;
+                kind = CSKind.TernaryIfFalse; break;
         }
         switch (charBeforeCommentEnd) {
             case '=':
-                if (kind !== CommentSwapKind.Absent) throw Error(
-                    `'${kind}' Comment Swap ends '=' (pos ${commentBegin})`);
-                kind = CommentSwapKind.LiteralAfter; break;
+                if (kind !== CSKind.Absent) throw Error(
+                    `'${CSKind[kind]}' Comment Swap ends '=' (pos ${commentBegin})`);
+                kind = CSKind.LiteralAfter; break;
             case '$':
-                if (kind !== CommentSwapKind.Absent) throw Error(
-                    `'${kind}' Comment Swap ends '$' (pos ${commentBegin})`);
-                kind = CommentSwapKind.VariableAfter; break;
+                if (kind !== CSKind.Absent) throw Error(
+                    `'${CSKind[kind]}' Comment Swap ends '$' (pos ${commentBegin})`);
+                kind = CSKind.VariableAfter; break;
             case '?':
-                if (kind !== CommentSwapKind.Absent) throw Error(
-                    `'${kind}' Comment Swap ends '?' (pos ${commentBegin})`);
-                kind = CommentSwapKind.TernaryCondition; break;
+                if (kind !== CSKind.Absent) throw Error(
+                    `'${CSKind[kind]}' Comment Swap ends '?' (pos ${commentBegin})`);
+                kind = CSKind.TernaryCondition; break;
         }
 
         // Record the Comment Swap.
