@@ -76,11 +76,8 @@ export default function quickCss(code: string) {
     for (let i=0, len=commentSwaps.length; i<len; i++) {
         const commentSwap = commentSwaps[i];
 
-        switch (commentSwap.kind) {
-            case CSKind.LiteralBefore:
-                transformedCode.push(commentSwap.replacement);
-                break;
-        }
+        // Append this Comment Swap's replacement code.
+        transformedCode.push(commentSwap.replacement);
 
         if (i !== commentSwaps.length-1) {
             // Append the code between this Comment Swap and the next one.
@@ -112,8 +109,8 @@ export default function quickCss(code: string) {
 */
     }
 
-    console.log(commentSwaps+'')
-    console.log(transformedCode.join(''));
+    // console.log(commentSwaps+'')
+    // console.log(transformedCode.join(''));
 
     return transformedCode.join('');
 }

@@ -10,26 +10,51 @@ test('Plugin name', t => {
 test('quickCss() passes', t => {
 	const boringCode = 'h1 { color:red }';
     const id = 'style.css';
+
+    const literalAfter  = '/* h2 =*/ h1 { color:/*blue=*/red }';
     const literalBefore = ' h1/*=h2*/ { color:red /*= blue */}';
-    const literalBeforeOut = ' h2 { color:blue }';
+    const literalOut = ' h2 { color:blue }';
+
+    // const ternary  = '/* falsey ?*/ h1 /*: h2 */{ color:/*big>2?*/red/*:blue*/ }';
+    // const ternaryOut = ' h2 { color:blue }';
+
+    const variableAfter  = '/* h2 $*/ h1 { color:/*blue$*/red }';
+    const variableBefore = ' h1/*$h2*/ { color:red /*$ blue */}';
+    const variableOut = ' h2 { color:blue }';
 
     t.is(commentSwap().transform(boringCode, id), null);
-    t.is(commentSwap({ quick:true }).transform(literalBefore, id), literalBeforeOut);
-    t.is(commentSwap().transform(literalBefore, id), literalBeforeOut); // defaults to `quick:true`
+
+    t.is(commentSwap({ quick:true }).transform(literalAfter, id), literalOut);
+    t.is(commentSwap().transform(literalAfter, id), literalOut); // defaults to `quick:true`
+    t.is(commentSwap().transform(literalBefore, id), literalOut);
+
+    // t.is(commentSwap().transform(ternary, id), ternaryOut);
+
+    t.is(commentSwap().transform(variableAfter, id), variableOut);
+    t.is(commentSwap().transform(variableBefore, id), variableOut);
 });
 
 test('quickCss() fails', t => {
+    const literalAfterAtEnd = 'abc /* def =*/';
+    const literalAfterNoReplacement = '/* abc =*/ :def';
+
     const literalBeforeAtStart = '/*= abc */ def';
     const literalBeforeNoReplacement = 'abc:  /*= def */';
     const literalBeforeEndsEquals = 'abc /*= d =*/';
     const literalBeforeEndsDollar = 'ab /*= cd $*/';
     const literalBeforeEndsQuestion = 'a /*= b ?*/';
 
+    const ternaryConditionAtEnd = '/* def ?*/';
+    const ternaryConditionNoReplacement = 'a/* bc ?*/   ; def';
+
     const ternaryIfFalseAtStart = '/*: abc */ def';
     const ternaryIfFalseNoReplacement = '  /*: def */';
     const ternaryIfFalseEndsEquals = '/*: bcd =*/';
     const ternaryIfFalseEndsDollar = 'abcde /*: fg $*/';
     const ternaryIfFalseEndsQuestion = 'ab /*: cd ?*/';
+
+    const variableAfterAtEnd = 'abc/*def$*/';
+    const variableAfterNoReplacement = 'abc/*def$*/ ';
 
     const variableBeforeAtStart = '/*$ abc */ def';
     const variableBeforeNoReplacement = 'abc:  /*$ def */';
@@ -38,12 +63,17 @@ test('quickCss() fails', t => {
     const variableBeforeEndsQuestion = 'abc /*$ d ?*/';
     const id = 'style.css';
 
-    t.throws(() => commentSwap().transform(literalBeforeAtStart, id), {
+    t.throws(() => commentSwap().transform(literalAfterAtEnd, id), {
         instanceOf: Error,
-        message: "A 'LiteralBefore' Comment Swap is at pos 0",
+        message: "A 'LiteralAfter' Comment Swap is at end of code",
     });
+    t.throws(() => commentSwap().transform(literalAfterNoReplacement, id), {
+        message: "A 'LiteralAfter' Comment Swap has nothing after it to replace" });
+
+    t.throws(() => commentSwap().transform(literalBeforeAtStart, id), {
+        message: "A 'LiteralBefore' Comment Swap is at pos 0" });
     t.throws(() => commentSwap().transform(literalBeforeNoReplacement, id), {
-        message: "A 'LiteralBefore' Comment Swap has no replacement" });
+        message: "A 'LiteralBefore' Comment Swap has nothing before it to replace" });
     t.throws(() => commentSwap().transform(literalBeforeEndsEquals, id), {
         message: "'LiteralBefore' Comment Swap ends '=' (pos 4)" });
     t.throws(() => commentSwap().transform(literalBeforeEndsDollar, id), {
@@ -51,8 +81,15 @@ test('quickCss() fails', t => {
     t.throws(() => commentSwap().transform(literalBeforeEndsQuestion, id), {
         message: "'LiteralBefore' Comment Swap ends '?' (pos 2)" });
 
+    t.throws(() => commentSwap().transform(ternaryConditionAtEnd, id), {
+        message: "A 'TernaryCondition' Comment Swap is at end of code" });
+    t.throws(() => commentSwap().transform(ternaryConditionNoReplacement, id), {
+        message: "A 'TernaryCondition' Comment Swap has nothing after it to replace" });
+
     t.throws(() => commentSwap().transform(ternaryIfFalseAtStart, id), {
         message: "A 'TernaryIfFalse' Comment Swap is at pos 0" });
+    t.throws(() => commentSwap().transform(ternaryIfFalseNoReplacement, id), {
+        message: "A 'TernaryIfFalse' Comment Swap has nothing before it to replace" });
     t.throws(() => commentSwap().transform(ternaryIfFalseEndsEquals, id), {
         message: "'TernaryIfFalse' Comment Swap ends '=' (pos 0)" });
     t.throws(() => commentSwap().transform(ternaryIfFalseEndsDollar, id), {
@@ -60,8 +97,15 @@ test('quickCss() fails', t => {
     t.throws(() => commentSwap().transform(ternaryIfFalseEndsQuestion, id), {
         message: "'TernaryIfFalse' Comment Swap ends '?' (pos 3)" });
 
+    t.throws(() => commentSwap().transform(variableAfterAtEnd, id), {
+        message: "A 'VariableAfter' Comment Swap is at end of code" });
+    t.throws(() => commentSwap().transform(variableAfterNoReplacement, id), {
+        message: "A 'VariableAfter' Comment Swap has nothing after it to replace" });
+
     t.throws(() => commentSwap().transform(variableBeforeAtStart, id), {
         message: "A 'VariableBefore' Comment Swap is at pos 0" });
+    t.throws(() => commentSwap().transform(variableBeforeNoReplacement, id), {
+        message: "A 'VariableBefore' Comment Swap has nothing before it to replace" });
     t.throws(() => commentSwap().transform(variableBeforeEndsEquals, id), {
         message: "'VariableBefore' Comment Swap ends '=' (pos 2)" });
     t.throws(() => commentSwap().transform(variableBeforeEndsDollar, id), {
