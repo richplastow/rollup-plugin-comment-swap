@@ -35,9 +35,9 @@ export default function commentSwap(
             if (filetype === Filetype.Other) return null;
       
             // Only process HTML files which contain at least one of these strings:
-            //     <!--=   =-->   <!--$   $-->   ?-->   <!--:
+            //     <!--=   =-->   <!--$   $-->   ?-->
             // Only process CSS and JS which contain at least one of these strings:
-            //     /*=   =*/   /*$   $*/   ?*/   /*:
+            //     /*=   =*/   /*$   $*/   ?*/
             // At least one of these will be present if the file uses Comment Swaps.
             if (filetype === Filetype.Html) {
                 if (! codeContainsHtmlCommentSwap(code)) return null;

@@ -69,7 +69,11 @@ In HTML:
 @TODO example
 ```
 
-### Ternary Comment Swap
+### Literal Ternary Comment Swap
+
+@TODO describe
+
+### Variable Ternary Comment Swap
 
 @TODO describe
 
@@ -117,7 +121,7 @@ Create an accompanying file `src/index.js`, containing some Comment Swaps:
 // Literal Comment Swap, using `=*/`
 console.log(/* 1234 =*/ 'Oh, hello');
 
-// Ternary Comment Swap, using `?*/` and `/*=`
+// Literal Ternary Comment Swap, using `?*/` and `/*=`
 console.log(/* hasThemeTune ?*/ '.'/*= 'na ' */.repeat(4));
 
 // Variable Comment Swap, using `$*/`

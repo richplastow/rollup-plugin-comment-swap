@@ -15,7 +15,7 @@ test('quickCss() passes', t => {
     const literalBefore = ' h1/*=h2*/ { color:red /*= blue */}';
     const literalOut = ' h2 { color:blue }';
 
-    // const ternary  = '/* falsey ?*/ h1 /*: h2 */{ color:/*big>2?*/red/*:blue*/ }';
+    // const ternary  = '/* falsey ?*/ h1 /*= h2 */{ color:/*big>2?*/red/*=blue*/ }';
     // const ternaryOut = ' h2 { color:blue }';
 
     const variableAfter  = '/* h2 $*/ h1 { color:/*blue$*/red }';
@@ -44,14 +44,12 @@ test('quickCss() fails', t => {
     const literalBeforeEndsDollar = 'ab /*= cd $*/';
     const literalBeforeEndsQuestion = 'a /*= b ?*/';
 
-    const ternaryConditionAtEnd = '/* def ?*/';
-    const ternaryConditionNoReplacement = 'a/* bc ?*/   ; def';
-
-    const ternaryIfFalseAtStart = '/*: abc */ def';
-    const ternaryIfFalseNoReplacement = '  /*: def */';
-    const ternaryIfFalseEndsEquals = '/*: bcd =*/';
-    const ternaryIfFalseEndsDollar = 'abcde /*: fg $*/';
-    const ternaryIfFalseEndsQuestion = 'ab /*: cd ?*/';
+    const ternaryConditionAtEnd = '/* abc ?*/';
+    const ternaryConditionIsOnlyCommentSwap = '/* abc ?*/ def /* ghi */';
+    const ternaryConditionThenLiteralAfter = '/* abc ?*/ def /* ghi =*/ jkl';
+    const ternaryConditionThenVariableAfter = 'a /* bc ?*/ def /* ghi $*/ jkl';
+    const twoTernaryConditionsTogether = '.../* abc ?*//* def ?*/ ghi';
+    const twoTernaryConditionsApart = '\t/* abc ?*/ def /* ghi ?*/ jkl';
 
     const variableAfterAtEnd = 'abc/*def$*/';
     const variableAfterNoReplacement = 'abc/*def$*/ ';
@@ -83,8 +81,16 @@ test('quickCss() fails', t => {
 
     t.throws(() => commentSwap().transform(ternaryConditionAtEnd, id), {
         message: "A 'TernaryCondition' Comment Swap is at end of code" });
-    t.throws(() => commentSwap().transform(ternaryConditionNoReplacement, id), {
-        message: "A 'TernaryCondition' Comment Swap has nothing after it to replace" });
+    t.throws(() => commentSwap().transform(ternaryConditionIsOnlyCommentSwap, id), {
+        message: "'TernaryCondition' at pos 0 is the last Comment Swap in the code" });
+    t.throws(() => commentSwap().transform(ternaryConditionThenLiteralAfter, id), {
+        message: "'LiteralAfter' at pos 15 follows 'TernaryCondition' at pos 0" });
+    t.throws(() => commentSwap().transform(ternaryConditionThenVariableAfter, id), {
+        message: "'VariableAfter' at pos 16 follows 'TernaryCondition' at pos 2" });
+    t.throws(() => commentSwap().transform(twoTernaryConditionsTogether, id), {
+        message: "'TernaryCondition' at pos 13 follows 'TernaryCondition' at pos 3" });
+    t.throws(() => commentSwap().transform(twoTernaryConditionsApart, id), {
+        message: "'TernaryCondition' at pos 16 follows 'TernaryCondition' at pos 1" });
 
     t.throws(() => commentSwap().transform(variableAfterAtEnd, id), {
         message: "A 'VariableAfter' Comment Swap is at end of code" });

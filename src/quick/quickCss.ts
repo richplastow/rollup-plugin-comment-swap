@@ -1,4 +1,5 @@
 import CommentSwapCss from '../types/CommentSwapCss';
+import CommentSwapKind from '../types/CommentSwapKind';
 import CSKind from '../types/CommentSwapKind';
 
 export default function quickCss(code: string) {
@@ -51,12 +52,13 @@ export default function quickCss(code: string) {
         }
 
         // Record the Comment Swap.
-        commentSwaps.push(new CommentSwapCss(
-            commentBegin,
-            commentEnd,
-            kind,
-            code,
-        ));
+        if (kind !== CSKind.Absent)
+            commentSwaps.push(new CommentSwapCss(
+                commentBegin,
+                commentEnd,
+                kind,
+                code,
+            ));
 
     }
 
@@ -69,10 +71,22 @@ export default function quickCss(code: string) {
         code.slice(0, commentSwaps[0].swapBegin), // before the first Comment Swap
     ];
 
-    // Rebuild the source code with either the truthy or falsey code from each
-    // Comment Swap.
+    // Rebuild the source code using each Comment Swap's replacement value.
     for (let i=0, len=commentSwaps.length; i<len; i++) {
         const commentSwap = commentSwaps[i];
+
+        // Every Ternary Condition must followed by a Literal Before or Variable Before.
+        if (commentSwap.kind === CommentSwapKind.TernaryCondition) {
+            if (i === len - 1) throw Error(`'TernaryCondition' at pos ${
+                commentSwap.commentBegin} is the last Comment Swap in the code`);
+            const next = commentSwaps[i+1];
+            if (
+                next.kind !== CommentSwapKind.LiteralBefore &&
+                next.kind !== CommentSwapKind.VariableBefore
+            ) throw Error(`'${CommentSwapKind[next.kind]}' at pos ${
+                next.commentBegin} follows 'TernaryCondition' at pos ${
+                commentSwap.commentBegin}`);
+        }
 
         // Append this Comment Swap's replacement code.
         transformedCode.push(commentSwap.replacement);
