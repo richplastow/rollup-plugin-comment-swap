@@ -3,7 +3,6 @@ enum CommentSwapKind {
     LiteralAfter,
     LiteralBefore,
     TernaryCondition,
-    TernaryIfFalse,
     VariableAfter,
     VariableBefore,
 }

@@ -86,17 +86,6 @@ test('quickCss() fails', t => {
     t.throws(() => commentSwap().transform(ternaryConditionNoReplacement, id), {
         message: "A 'TernaryCondition' Comment Swap has nothing after it to replace" });
 
-    t.throws(() => commentSwap().transform(ternaryIfFalseAtStart, id), {
-        message: "A 'TernaryIfFalse' Comment Swap is at pos 0" });
-    t.throws(() => commentSwap().transform(ternaryIfFalseNoReplacement, id), {
-        message: "A 'TernaryIfFalse' Comment Swap has nothing before it to replace" });
-    t.throws(() => commentSwap().transform(ternaryIfFalseEndsEquals, id), {
-        message: "'TernaryIfFalse' Comment Swap ends '=' (pos 0)" });
-    t.throws(() => commentSwap().transform(ternaryIfFalseEndsDollar, id), {
-        message: "'TernaryIfFalse' Comment Swap ends '$' (pos 6)" });
-    t.throws(() => commentSwap().transform(ternaryIfFalseEndsQuestion, id), {
-        message: "'TernaryIfFalse' Comment Swap ends '?' (pos 3)" });
-
     t.throws(() => commentSwap().transform(variableAfterAtEnd, id), {
         message: "A 'VariableAfter' Comment Swap is at end of code" });
     t.throws(() => commentSwap().transform(variableAfterNoReplacement, id), {

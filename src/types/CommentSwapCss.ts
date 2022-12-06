@@ -15,19 +15,23 @@ export default class CommentSwapCss {
         this.swapEnd = commentEnd;
 
         switch (kind) {
-            case CSKind.LiteralBefore:
-            case CSKind.VariableBefore:
-            case CSKind.TernaryIfFalse:
-                [ this.replacement, this.swapBegin ] =
-                    prepareReplacementBefore(commentBegin, commentEnd, kind, code);
-                break;
-
             case CSKind.LiteralAfter:
             case CSKind.VariableAfter:
             case CSKind.TernaryCondition:
                 [ this.replacement, this.swapEnd ] =
                     prepareReplacementAfter(commentBegin, commentEnd, kind, code);
                 break;
+
+            case CSKind.LiteralBefore:
+            case CSKind.VariableBefore:
+                [ this.replacement, this.swapBegin ] =
+                    prepareReplacementBefore(commentBegin, commentEnd, kind, code);
+                break;
+
+            // case CSKind.TernaryCondition:
+            //     [ this.replacement, this.swapEnd ] =
+            //         prepareReplacementTernary(commentBegin, commentEnd, kind, code);
+            //     break;
         }
 
     }

@@ -34,8 +34,6 @@ export default function quickCss(code: string) {
                 kind = CSKind.LiteralBefore; break;
             case '$':
                 kind = CSKind.VariableBefore; break;
-            case ':':
-                kind = CSKind.TernaryIfFalse; break;
         }
         switch (charBeforeCommentEnd) {
             case '=':
