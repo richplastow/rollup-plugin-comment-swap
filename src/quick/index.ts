@@ -1,3 +1,4 @@
+import type { RollupCommentSwapOptions } from '../../types';
 import Filetype from '../types/Filetype';
 
 import quickCss from './quickCss';
@@ -5,12 +6,13 @@ import quickHtml from './quickHtml';
 import quickJs from './quickJs';
 
 export default function quick(
+    opts: RollupCommentSwapOptions,
     code: string,
     filetype: Filetype,
 ) {
     switch (filetype) {
         case Filetype.Css:
-            return quickCss(code);
+            return quickCss(opts, code);
         case Filetype.Html:
             return quickHtml(code);
         case Filetype.Js:

@@ -1,8 +1,11 @@
+import type { RollupCommentSwapOptions } from '../../types';
 import CommentSwapCss from '../types/CommentSwapCss';
-import CommentSwapKind from '../types/CommentSwapKind';
 import CSKind from '../types/CommentSwapKind';
 
-export default function quickCss(code: string) {
+export default function quickCss(
+    opts: RollupCommentSwapOptions,
+    code: string,
+) {
     // Initialise `commentSwaps`, which will contain each CommentSwapCss instance.
     // Initialise `pos`, the current character position in `code`.
     // Get `len`, the number of characters in `code`.
@@ -52,19 +55,27 @@ export default function quickCss(code: string) {
         }
 
         // Record the Comment Swap.
-        if (kind !== CSKind.Absent)
+        if (kind !== CSKind.Absent) {
             commentSwaps.push(new CommentSwapCss(
                 commentBegin,
                 commentEnd,
                 kind,
-                code,
             ));
+        }
 
     }
 
     // If there are no valid Comment Swaps, return the source code untransformed.
     if (commentSwaps.length === 0)
         return code;
+
+    // Process each Comment Swap. This will populate the `replacement`, `swapBegin`
+    // and `swapEnd` properties.
+    for (let i=0, len=commentSwaps.length; i<len; i++) {
+        const prevKind = i === 0 ? CSKind.Absent : commentSwaps[i-1].kind;
+        const nextCommentSwap = i === len - 1 ? null : commentSwaps[i+1];
+        commentSwaps[i].process(opts, code, prevKind, nextCommentSwap);
+    }
 
     // Initialise an array, which will be output as a string.
     const transformedCode = [
@@ -73,52 +84,16 @@ export default function quickCss(code: string) {
 
     // Rebuild the source code using each Comment Swap's replacement value.
     for (let i=0, len=commentSwaps.length; i<len; i++) {
-        const commentSwap = commentSwaps[i];
-
-        // Every Ternary Condition must followed by a Literal Before or Variable Before.
-        if (commentSwap.kind === CommentSwapKind.TernaryCondition) {
-            if (i === len - 1) throw Error(`'TernaryCondition' at pos ${
-                commentSwap.commentBegin} is the last Comment Swap in the code`);
-            const next = commentSwaps[i+1];
-            if (
-                next.kind !== CommentSwapKind.LiteralBefore &&
-                next.kind !== CommentSwapKind.VariableBefore
-            ) throw Error(`'${CommentSwapKind[next.kind]}' at pos ${
-                next.commentBegin} follows 'TernaryCondition' at pos ${
-                commentSwap.commentBegin}`);
-        }
 
         // Append this Comment Swap's replacement code.
-        transformedCode.push(commentSwap.replacement);
+        transformedCode.push(commentSwaps[i].replacement);
 
-        if (i !== commentSwaps.length-1) {
-            // Append the code between this Comment Swap and the next one.
-            transformedCode.push(
-                code.slice(commentSwaps[i].swapEnd, commentSwaps[i+1].swapBegin)
-            );
-        } else {
-            // Append the remaining code after the last Comment Swap.
-            transformedCode.push(
-                code.slice(commentSwaps[i].swapEnd)
-            );
-        }
+        // Append the code between this Comment Swap and the next one. Or if this
+        // is the last Comment Swap, just append the remaining code.
+        transformedCode.push(
+            code.slice(commentSwaps[i].swapEnd, commentSwaps[i+1]?.swapBegin)
+        );
 
-/*
-        const condition = commentPair.condition.source;
-        const isTruthy = options[condition];
-        console.log(condition, 'is', isTruthy?'truthy':'falsey', commentPair);
-        transformedCode.push(
-            isTruthy
-            ? commentPair.truthy.source
-            : commentPair.falsey.source
-        );
-        transformedCode.push(
-            source.slice(
-                commentPair.falsey.end,
-                i === len-1 ? source.length : commentSwaps[i+1].condition.begin
-            )
-        );
-*/
     }
 
     // console.log(commentSwaps+'')

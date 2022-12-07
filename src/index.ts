@@ -45,7 +45,7 @@ export default function commentSwap(
                 if (! codeContainsCssJsCommentSwap(code)) return null;
             }
       
-            return opts.quick ? quick(code, filetype) : slow(code);
+            return opts.quick ? quick(opts, code, filetype) : slow(code);
         }  
     };
 }

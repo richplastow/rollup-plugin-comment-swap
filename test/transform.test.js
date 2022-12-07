@@ -15,8 +15,11 @@ test('quickCss() passes', t => {
     const literalBefore = ' h1/*=h2*/ { color:red /*= blue */}';
     const literalOut = ' h2 { color:blue }';
 
-    // const ternary  = '/* falsey ?*/ h1 /*= h2 */{ color:/*big>2?*/red/*=blue*/ }';
-    // const ternaryOut = ' h2 { color:blue }';
+    const ternaryEmptyConditionLiteral = '/* \t\n ?*/ h1 /*= h2 */{ color:/*?*/red/*=blue*/ }';
+    const ternaryFalseyConditionLiteral = '/* falsey ?*/ h1 /*= h2 */{ color:blue }';
+    const ternaryMissingConditionLiteral = '/* missing ?*/ h1 /*= h2 */{ color:blue }';
+    const ternaryTruthyConditionLiteral = '/* truthy ?*/ h2 /*= h1 */{ color:blue }';
+    const ternaryOut = ' h2 { color:blue }';
 
     const variableAfter  = '/* h2 $*/ h1 { color:/*blue$*/red }';
     const variableBefore = ' h1/*$h2*/ { color:red /*$ blue */}';
@@ -28,7 +31,10 @@ test('quickCss() passes', t => {
     t.is(commentSwap().transform(literalAfter, id), literalOut); // defaults to `quick:true`
     t.is(commentSwap().transform(literalBefore, id), literalOut);
 
-    // t.is(commentSwap().transform(ternary, id), ternaryOut);
+    t.is(commentSwap().transform(ternaryEmptyConditionLiteral, id), ternaryOut);
+    t.is(commentSwap({ $:{ falsey:'' } }).transform(ternaryFalseyConditionLiteral, id), ternaryOut);
+    t.is(commentSwap().transform(ternaryMissingConditionLiteral, id), ternaryOut);
+    t.is(commentSwap({ $:{ truthy:[] } }).transform(ternaryTruthyConditionLiteral, id), ternaryOut);
 
     t.is(commentSwap().transform(variableAfter, id), variableOut);
     t.is(commentSwap().transform(variableBefore, id), variableOut);
@@ -48,8 +54,10 @@ test('quickCss() fails', t => {
     const ternaryConditionIsOnlyCommentSwap = '/* abc ?*/ def /* ghi */';
     const ternaryConditionThenLiteralAfter = '/* abc ?*/ def /* ghi =*/ jkl';
     const ternaryConditionThenVariableAfter = 'a /* bc ?*/ def /* ghi $*/ jkl';
-    const twoTernaryConditionsTogether = '.../* abc ?*//* def ?*/ ghi';
     const twoTernaryConditionsApart = '\t/* abc ?*/ def /* ghi ?*/ jkl';
+    const twoTernaryConditionsTogether = '.../* abc ?*//* def ?*/ ghi';
+
+    const ternarySyntaxError = '/* # ?*/ a /*= b */';
 
     const variableAfterAtEnd = 'abc/*def$*/';
     const variableAfterNoReplacement = 'abc/*def$*/ ';
@@ -87,10 +95,13 @@ test('quickCss() fails', t => {
         message: "'LiteralAfter' at pos 15 follows 'TernaryCondition' at pos 0" });
     t.throws(() => commentSwap().transform(ternaryConditionThenVariableAfter, id), {
         message: "'VariableAfter' at pos 16 follows 'TernaryCondition' at pos 2" });
-    t.throws(() => commentSwap().transform(twoTernaryConditionsTogether, id), {
-        message: "'TernaryCondition' at pos 13 follows 'TernaryCondition' at pos 3" });
     t.throws(() => commentSwap().transform(twoTernaryConditionsApart, id), {
         message: "'TernaryCondition' at pos 16 follows 'TernaryCondition' at pos 1" });
+    t.throws(() => commentSwap().transform(twoTernaryConditionsTogether, id), {
+        message: "'TernaryCondition' at pos 13 follows 'TernaryCondition' at pos 3" });
+
+    t.throws(() => commentSwap().transform(ternarySyntaxError, id), {
+        message: "'TernaryCondition' at pos 0 fails /^[$_a-z][$_a-z0-9]*$/i" });
 
     t.throws(() => commentSwap().transform(variableAfterAtEnd, id), {
         message: "A 'VariableAfter' Comment Swap is at end of code" });
