@@ -60,7 +60,7 @@ test('quickCss() error: Ternary Syntax', t => {
     const ternarySyntaxError = '/* # ?*/ a /*= b */';
 
     t.throws(() => commentSwap().transform(ternarySyntaxError, id), {
-        message: "'TernaryCondition' at pos 0 fails /^[$_a-z][$_a-z0-9]*$/i" });
+        message: "'TernaryCondition' content at pos 2 fails /^[$_a-z][$_a-z0-9]*$/i" });
 });
 
 test('quickCss() error: Variable After', t => {

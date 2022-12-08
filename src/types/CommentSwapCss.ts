@@ -36,6 +36,7 @@ export default class CommentSwapCss {
             case CSKind.VariableAfter:
                 [ this.replacement, this.swapEnd ] =
                     prepareReplacementAfter(
+                        opts,
                         this.commentBegin,
                         this.commentEnd,
                         this.kind,
@@ -47,6 +48,7 @@ export default class CommentSwapCss {
             case CSKind.VariableBefore:
                 [ this.replacement, this.swapBegin ] =
                     prepareReplacementBefore(
+                        opts,
                         this.commentBegin,
                         this.commentEnd,
                         this.kind,
@@ -73,6 +75,7 @@ export default class CommentSwapCss {
 }
 
 function prepareReplacementAfter(
+    opts: RollupCommentSwapOptions,
     commentBegin: number,
     commentEnd: number,
     kind: CSKind,
@@ -110,19 +113,28 @@ function prepareReplacementAfter(
     const swapEnd = pos;
 
     // Ensure there is something to replace.
-    if (swapEnd === preservedSpaceEnd)
-        throw Error(`A '${CSKind[kind]}' Comment Swap has nothing after it to replace`);
+    if (swapEnd === preservedSpaceEnd) throw Error(`A '${CSKind[kind]
+        }' Comment Swap has nothing after it to replace`);
 
-    // Get the replacement code from inside the comment.
+    // Get the source code (literal or variable) from inside the comment.
+    const source = getCommentContent(
+        commentBegin + 2, commentEnd - 3, code, kind);
+
+    // Get the replacement code.
     const replacement =
         code.slice(commentEnd, preservedSpaceEnd) +
-        code.slice(commentBegin + 2, commentEnd - 3).trim()
+        (
+            kind === CSKind.LiteralAfter
+                ? source
+                : opts.$?.[source]
+        )
     ;
 
     return [ replacement, swapEnd ];
 }
 
 function prepareReplacementBefore(
+    opts: RollupCommentSwapOptions,
     commentBegin: number,
     commentEnd: number,
     kind: CSKind,
@@ -158,12 +170,20 @@ function prepareReplacementBefore(
     const swapBegin = pos + 1;
 
     // Ensure there is something to replace.
-    if (swapBegin === preservedSpaceBegin)
-        throw Error(`A '${CSKind[kind]}' Comment Swap has nothing before it to replace`);
+    if (swapBegin === preservedSpaceBegin) throw Error(`A '${CSKind[kind]
+        }' Comment Swap has nothing before it to replace`);
 
-    // Get the replacement code from inside the comment.
+    // Get the source code (literal or variable) from inside the comment.
+    const source = getCommentContent(
+        commentBegin + 3, commentEnd - 2, code, kind);
+
+    // Get the replacement code.
     const replacement =
-        code.slice(commentBegin + 3, commentEnd - 2).trim() +
+        (
+            kind === CSKind.LiteralBefore
+                ? source
+                : opts.$?.[source]
+        ) +
         code.slice(preservedSpaceBegin, commentBegin)
     ;
 
@@ -195,28 +215,67 @@ function prepareReplacementTernary(
             nextCS.commentBegin} follows 'TernaryCondition' at pos ${
             commentBegin}`);
 
-    // Get the condition from inside this Ternary Condition's comment.
-    const condition = code.slice(commentBegin + 2, commentEnd - 3).trim();
-
-    // Throw an exception if the condition is not parseable.
-    if (condition !== '' && ! /^[$_a-z][$_a-z0-9]*$/i.test(condition))
-        throw Error(`'TernaryCondition' at pos ${
-            commentBegin} fails /^[$_a-z][$_a-z0-9]*$/i`);
+    const condition = getCommentContent(
+        commentBegin + 2, commentEnd - 3, code, CSKind.TernaryCondition);
 
     // Resolve the condition against the `$` object, from the plugin options.
-    const conditionIsTrue = opts.$?.[condition];
+    // If true, `replacement` is the code between the end of this Ternary Condition
+    // and the start of the next Comment Swap.
+    if (opts.$?.[condition]) {
+        return [
+            code.slice(commentEnd, nextCS.commentBegin),
+            nextCS.commentEnd, // the position at the end of the next Comment Swap
+        ]
+    };
 
-    return [
-        conditionIsTrue
-            // If true, `replacement` is the code between the end of this
-            // Ternary Condition and the start of the next Comment Swap.
-            ? code.slice(commentEnd, nextCS.commentBegin)
+    // The condition is false, so get the content of the next Comment Swap.
+    const content = getCommentContent(
+        nextCS.commentBegin + 3,
+        nextCS.commentEnd - 2,
+        code,
+        nextCS.kind,
+        nextCS.kind === CSKind.LiteralBefore, // special case!
+    );
 
-            // If false, `replacement` is the code inside the next Comment Swap.
-            // It's not trimmed - whitespace is preserved as-is.
-            : code.slice(nextCS.commentBegin + 3, nextCS.commentEnd - 2),
+    // If the condition is false and the next Comment Swap is a LiteralBefore,
+    // `replacement` is the code inside the next Comment Swap. In this special case,
+    // the Literal content has not been trimmed - whitespace was preserved as-is.
+    if (nextCS.kind === CSKind.LiteralBefore) return [ content, nextCS.commentEnd ];
+    
+    // Here, the condition is false and the next Comment Swap is a VariableBefore.
+    // The Variable will be read from the `opts.$` object, if it exists.
+    return [ opts.$?.[content], nextCS.commentEnd ];
+}
 
-        // `swapEnd` is the position at the end of the next Comment Swap.
-        nextCS.commentEnd,
-    ];
+function getCommentContent(
+    sourceBegin: number,
+    sourceEnd: number,
+    code: string,
+    kind: CSKind,
+    preserveWhitespace: boolean = false,
+) {
+    // Get the content (Literal or Variable) from inside the comment.
+    let content = code.slice(sourceBegin, sourceEnd);
+
+    // Literal Comment Swap content can contain any characters.
+    if (kind === CSKind.LiteralAfter ||
+        kind === CSKind.LiteralBefore
+    ) {
+        // Leading and trailing whitespace should be removed, unless this
+        // is a LiteralBefore following a TernaryCondition.
+        if (preserveWhitespace)
+            return content;
+        else
+            return content.trim();
+    }
+
+    // Not a Literal Comment Swap, so remove leading and trailing whitespace.
+    content = content.trim();
+
+    // Throw an exception if the content is not parseable.
+    if (content !== '' && ! /^[$_a-z][$_a-z0-9]*$/i.test(content))
+        throw Error(`'${CSKind[kind]}' content at pos ${
+            sourceBegin} fails /^[$_a-z][$_a-z0-9]*$/i`);
+
+    return content;
 }
