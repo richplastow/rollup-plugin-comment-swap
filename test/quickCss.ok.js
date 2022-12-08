@@ -34,29 +34,37 @@ test('quickCss() ok: Ternary Literal', t => {
 });
 
 test('quickCss() ok: Ternary Variable', t => {
-    const ternaryEmptyConditionVariable = ' /* \t\n ?*/h1/*$ trimmedHeading */ { color:/*?*/red/*$ shade */ }';
-    const ternaryFalseyConditionVariable = '/* falsey ?*/ h1 /*$ spacedHeading */{ color:blue }';
-    const ternaryMissingConditionVariable = ' /* missing ?*/h1/*$ trimmedHeading */ { color:blue }';
-    const ternaryTruthyConditionVariable = '/* truthy ?*/ h2 /*$ spacedHeading */{ color:blue }';
+    const ternaryEmptyConditionVariable =
+        ' /* \t\n ?*/h1/*$ heading */ { color:/*?*/red/*$ shade */ }';
+    const ternaryFalseyConditionVariable =
+        '/* falsey ?*/ h1 /*$ headingSpc */{ color:/*nonesuch?*/red /*$shadeSpc*/}';
+    const ternaryTruthyConditionVariable =
+        '/* truthy ?*/ h2 /*$ headingSpc */{ color:/*?shade*/red/*$shade*/ }';
+    const ternaryVariableDoesNotExist =
+        ' /* falsey?*/h2/*$ nonesuch */ { color:/* ?*/blue/*$nonesuch*/ }';
     const ternaryOut = ' h2 { color:blue }';
     const opts = {
-        $:{ trimmedHeading:'h2', spacedHeading:' h2 ', shade:'blue' }
+        $:{ heading:'h2', headingSpc:' h2 ', shade:'blue' , shadeSpc:'blue ' }
     };
 
     t.is(commentSwap(opts).transform(ternaryEmptyConditionVariable, id), ternaryOut);
     t.is(commentSwap({ $:{ falsey:'' }, ...opts }).transform(ternaryFalseyConditionVariable, id), ternaryOut);
-    t.is(commentSwap(opts).transform(ternaryMissingConditionVariable, id), ternaryOut);
     t.is(commentSwap({ $:{ truthy:[] }, ...opts }).transform(ternaryTruthyConditionVariable, id), ternaryOut);
+    t.is(commentSwap({ $:{ falsey:'' }, ...opts }).transform(ternaryVariableDoesNotExist, id), ternaryOut);
 });
 
 test('quickCss() ok: Variable', t => {
     const variableAfter  = '/* heading $*/ h1 { color:/*shade$*/red }';
     const variableBefore = ' h1/*$heading*/ { color:red /*$ shade */}';
+    const variableNonesuch  = '/* nonesuch $*/ h2 { color:blue /*$ nonesuch */}';
+    const variableNumeric  = ' h/* numeric $*/1 { color:blue }';
     const variableOut = ' h2 { color:blue }';
     const opts = {
-        $:{ heading:'h2', shade:'blue' }
+        $:{ heading:'h2', numeric:2, shade:'blue' }
     };
 
     t.is(commentSwap(opts).transform(variableAfter, id), variableOut);
     t.is(commentSwap(opts).transform(variableBefore, id), variableOut);
+    t.is(commentSwap(opts).transform(variableNonesuch, id), variableOut);
+    t.is(commentSwap(opts).transform(variableNumeric, id), variableOut);
 });

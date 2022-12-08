@@ -1,3 +1,4 @@
+import { IndexKind } from 'typescript';
 import type { RollupCommentSwapOptions } from '../../types';
 import CSKind from './CommentSwapKind';
 
@@ -78,7 +79,7 @@ function prepareReplacementAfter(
     opts: RollupCommentSwapOptions,
     commentBegin: number,
     commentEnd: number,
-    kind: CSKind,
+    kind: CSKind.LiteralAfter | CSKind.VariableAfter,
     code: string,
 ): [ string, number ] {
     const len = code.length;
@@ -116,19 +117,22 @@ function prepareReplacementAfter(
     if (swapEnd === preservedSpaceEnd) throw Error(`A '${CSKind[kind]
         }' Comment Swap has nothing after it to replace`);
 
-    // Get the source code (literal or variable) from inside the comment.
-    const source = getCommentContent(
+    // Get the content (literal or variable) from inside the comment.
+    const content = getCommentContent(
         commentBegin + 2, commentEnd - 3, code, kind);
 
-    // Get the replacement code.
-    const replacement =
-        code.slice(commentEnd, preservedSpaceEnd) +
-        (
-            kind === CSKind.LiteralAfter
-                ? source
-                : opts.$?.[source]
-        )
-    ;
+    // If this Comment Swap is a Variable, retrieve it from `opts.$`.
+    // Otherwise use the content literally returned by getCommentContent().
+    const value = kind === CSKind.VariableAfter
+        ? opts.$?.[content]
+        : content;
+
+    // The replacement code is any preserved whitespace followed by the value.
+    // In the edge case where the variable is missing from `opts.$`, keep the
+    // original source code the way it was.
+    const replacement = typeof value !== 'undefined'
+        ? code.slice(commentEnd, preservedSpaceEnd) + value
+        : code.slice(commentEnd, swapEnd);
 
     return [ replacement, swapEnd ];
 }
@@ -137,7 +141,7 @@ function prepareReplacementBefore(
     opts: RollupCommentSwapOptions,
     commentBegin: number,
     commentEnd: number,
-    kind: CSKind,
+    kind: CSKind.LiteralBefore | CSKind.VariableBefore,
     code: string,
 ): [ string, number ] {
     // Throw an exception if this Comment Swap begins the code.
@@ -173,19 +177,22 @@ function prepareReplacementBefore(
     if (swapBegin === preservedSpaceBegin) throw Error(`A '${CSKind[kind]
         }' Comment Swap has nothing before it to replace`);
 
-    // Get the source code (literal or variable) from inside the comment.
-    const source = getCommentContent(
+    // Get the content (literal or variable) from inside the comment.
+    const content = getCommentContent(
         commentBegin + 3, commentEnd - 2, code, kind);
 
-    // Get the replacement code.
-    const replacement =
-        (
-            kind === CSKind.LiteralBefore
-                ? source
-                : opts.$?.[source]
-        ) +
-        code.slice(preservedSpaceBegin, commentBegin)
-    ;
+    // If this Comment Swap is a Variable, retrieve it from `opts.$`.
+    // Otherwise use the content literally returned by getCommentContent().
+    const value = kind === CSKind.VariableBefore
+        ? opts.$?.[content]
+        : content;
+
+    // The replacement code is the value followed by any preserved whitespace.
+    // In the edge case where the variable is missing from `opts.$`, keep the
+    // original source code the way it was.
+    const replacement = typeof value !== 'undefined'
+        ? value + code.slice(preservedSpaceBegin, commentBegin)
+        : code.slice(swapBegin, commentBegin);
 
     return [ replacement, swapBegin ];
 }
@@ -215,6 +222,7 @@ function prepareReplacementTernary(
             nextCS.commentBegin} follows 'TernaryCondition' at pos ${
             commentBegin}`);
 
+    // Get the content from inside this Ternary Condition comment.
     const condition = getCommentContent(
         commentBegin + 2, commentEnd - 3, code, CSKind.TernaryCondition);
 
@@ -228,7 +236,8 @@ function prepareReplacementTernary(
         ]
     };
 
-    // The condition is false, so get the content of the next Comment Swap.
+    // The condition is false, so get the content (literal or variable) from
+    // inside the next Comment Swap.
     const content = getCommentContent(
         nextCS.commentBegin + 3,
         nextCS.commentEnd - 2,
@@ -237,14 +246,23 @@ function prepareReplacementTernary(
         nextCS.kind === CSKind.LiteralBefore, // special case!
     );
 
-    // If the condition is false and the next Comment Swap is a LiteralBefore,
-    // `replacement` is the code inside the next Comment Swap. In this special case,
-    // the Literal content has not been trimmed - whitespace was preserved as-is.
-    if (nextCS.kind === CSKind.LiteralBefore) return [ content, nextCS.commentEnd ];
-    
-    // Here, the condition is false and the next Comment Swap is a VariableBefore.
-    // The Variable will be read from the `opts.$` object, if it exists.
-    return [ opts.$?.[content], nextCS.commentEnd ];
+    // If the condition is false and the next Comment Swap is a Variable,
+    // retrieve it from `opts.$`.
+    //
+    // Otherwise use the content literally returned by getCommentContent().
+    // In this special case, the Literal content has not been trimmed -
+    // whitespace was preserved as-is.
+    const value = nextCS.kind === CSKind.VariableBefore
+        ? opts.$?.[content]
+        : content;
+
+    // The replacement code is usually just the value. In the edge case where the
+    // variable is missing from `opts.$`, behave as if the condition was falsey.
+    const replacement = typeof value !== 'undefined'
+        ? value
+        : code.slice(commentEnd, nextCS.commentBegin);
+
+    return [ replacement, nextCS.commentEnd ];
 }
 
 function getCommentContent(
