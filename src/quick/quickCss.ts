@@ -29,9 +29,19 @@ export default function quickCss(
         commentEnd += 2; // the position after the '/'
         pos = commentEnd; // jump to the character after '*/'
 
-        // Determine the kind of Comment Swap.
+        // Treat /*=*/ as a LiteralBefore Comment Swap, with empty content.
         const charBeforeCommentEnd = code[commentEnd-3];
         const charAfterCommentBegin = code[commentBegin+2];
+        if (commentEnd === commentBegin + 5 && charAfterCommentBegin === '=') {
+            commentSwaps.push(new CommentSwapCss(
+                commentBegin,
+                commentEnd,
+                CSKind.LiteralBefore,
+            ));
+            continue;
+        }
+
+        // Determine the kind of Comment Swap.
         let kind = CSKind.Absent;
         switch (charAfterCommentBegin) {
             case '=':

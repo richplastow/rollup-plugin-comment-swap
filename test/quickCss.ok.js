@@ -11,11 +11,13 @@ test('quickCss() ok: No Comment Swaps', t => {
 test('quickCss() ok: Literal', t => {
     const literalAfter  = '/* h2 =*/ h1 { color:/*blue=*/red }';
     const literalBefore = ' h1/*=h2*/ { color:red /*= blue */}';
-    const literalOut = ' h2 { color:blue }';
+    const literalEmpty = 'article/*=*/ h2 { /*hullo*//*=*/color:blue }';
+    const literalOk = ' h2 { color:blue }';
 
-    t.is(commentSwap({ quick:true }).transform(literalAfter, id), literalOut);
-    t.is(commentSwap().transform(literalAfter, id), literalOut); // defaults to `quick:true`
-    t.is(commentSwap().transform(literalBefore, id), literalOut);
+    t.is(commentSwap({ quick:true }).transform(literalAfter, id), literalOk);
+    t.is(commentSwap().transform(literalAfter, id), literalOk); // defaults to `quick:true`
+    t.is(commentSwap().transform(literalBefore, id), literalOk);
+    t.is(commentSwap().transform(literalEmpty, id), literalOk);
 });
 
 test('quickCss() ok: Ternary Literal', t => {
@@ -24,13 +26,13 @@ test('quickCss() ok: Ternary Literal', t => {
     const ternaryFalseyConditionLiteral = '/* falsey ?*/ h1 /*= h2 */{ color:blue }';
     const ternaryMissingConditionLiteral = '/* missing ?*/ h1 /*= h2 */{ color:blue }';
     const ternaryTruthyConditionLiteral = '/* truthy ?*/ h2 /*= h1 */{ color:blue }';
-    const ternaryOut = ' h2 { color:blue }';
+    const ternaryOk = ' h2 { color:blue }';
 
-    t.is(commentSwap().transform(ternaryAlmostEmptyConditionLiteral, id), ternaryOut);
-    t.is(commentSwap().transform(ternaryEmptyConditionLiteral, id), ternaryOut);
-    t.is(commentSwap({ $:{ falsey:'' } }).transform(ternaryFalseyConditionLiteral, id), ternaryOut);
-    t.is(commentSwap().transform(ternaryMissingConditionLiteral, id), ternaryOut);
-    t.is(commentSwap({ $:{ truthy:[] } }).transform(ternaryTruthyConditionLiteral, id), ternaryOut);
+    t.is(commentSwap().transform(ternaryAlmostEmptyConditionLiteral, id), ternaryOk);
+    t.is(commentSwap().transform(ternaryEmptyConditionLiteral, id), ternaryOk);
+    t.is(commentSwap({ $:{ falsey:'' } }).transform(ternaryFalseyConditionLiteral, id), ternaryOk);
+    t.is(commentSwap().transform(ternaryMissingConditionLiteral, id), ternaryOk);
+    t.is(commentSwap({ $:{ truthy:[] } }).transform(ternaryTruthyConditionLiteral, id), ternaryOk);
 });
 
 test('quickCss() ok: Ternary Variable', t => {
@@ -42,15 +44,15 @@ test('quickCss() ok: Ternary Variable', t => {
         '/* truthy ?*/ h2 /*$ headingSpc */{ color:/*?shade*/red/*$shade*/ }';
     const ternaryVariableDoesNotExist =
         ' /* falsey?*/h2/*$ nonesuch */ { color:/* ?*/blue/*$nonesuch*/ }';
-    const ternaryOut = ' h2 { color:blue }';
+    const ternaryOk = ' h2 { color:blue }';
     const opts = {
         $:{ heading:'h2', headingSpc:' h2 ', shade:'blue' , shadeSpc:'blue ' }
     };
 
-    t.is(commentSwap(opts).transform(ternaryEmptyConditionVariable, id), ternaryOut);
-    t.is(commentSwap({ $:{ falsey:'' }, ...opts }).transform(ternaryFalseyConditionVariable, id), ternaryOut);
-    t.is(commentSwap({ $:{ truthy:[] }, ...opts }).transform(ternaryTruthyConditionVariable, id), ternaryOut);
-    t.is(commentSwap({ $:{ falsey:'' }, ...opts }).transform(ternaryVariableDoesNotExist, id), ternaryOut);
+    t.is(commentSwap(opts).transform(ternaryEmptyConditionVariable, id), ternaryOk);
+    t.is(commentSwap({ $:{ falsey:'' }, ...opts }).transform(ternaryFalseyConditionVariable, id), ternaryOk);
+    t.is(commentSwap({ $:{ truthy:[] }, ...opts }).transform(ternaryTruthyConditionVariable, id), ternaryOk);
+    t.is(commentSwap({ $:{ falsey:'' }, ...opts }).transform(ternaryVariableDoesNotExist, id), ternaryOk);
 });
 
 test('quickCss() ok: Variable', t => {
@@ -58,13 +60,26 @@ test('quickCss() ok: Variable', t => {
     const variableBefore = ' h1/*$heading*/ { color:red /*$ shade */}';
     const variableNonesuch  = '/* nonesuch $*/ h2 { color:blue /*$ nonesuch */}';
     const variableNumeric  = ' h/* numeric $*/1 { color:blue }';
-    const variableOut = ' h2 { color:blue }';
+    const variableOk = ' h2 { color:blue }';
     const opts = {
         $:{ heading:'h2', numeric:2, shade:'blue' }
     };
 
-    t.is(commentSwap(opts).transform(variableAfter, id), variableOut);
-    t.is(commentSwap(opts).transform(variableBefore, id), variableOut);
-    t.is(commentSwap(opts).transform(variableNonesuch, id), variableOut);
-    t.is(commentSwap(opts).transform(variableNumeric, id), variableOut);
+    t.is(commentSwap(opts).transform(variableAfter, id), variableOk);
+    t.is(commentSwap(opts).transform(variableBefore, id), variableOk);
+    t.is(commentSwap(opts).transform(variableNonesuch, id), variableOk);
+    t.is(commentSwap(opts).transform(variableNumeric, id), variableOk);
+});
+
+test('quickCss() ok: CSS Selector', t => {
+    const comma1    = '/* h4, h3 =*/h1, h2 { color:red };';
+    const comma1Ok  = 'h4, h3, h2 { color:red };';
+    const comma2    = 'a,p/*=q*/{}';
+    const comma2Ok  = 'a,q{}';
+    const comma3    = 'div/*?*/, span/*=*/ {}';
+    const comma3Ok  = 'div {}';
+
+    t.is(commentSwap().transform(comma1, id), comma1Ok);
+    t.is(commentSwap().transform(comma2, id), comma2Ok);
+    t.is(commentSwap().transform(comma3, id), comma3Ok);
 });

@@ -107,7 +107,7 @@ function prepareReplacementAfter(
     for (; pos<len; pos++) {
         const char = code[pos];
         const charIsSpace = char === ' ' || char === '\t' || char === '\n';
-        if (charIsSpace || char === ':' || char === ';') {
+        if (charIsSpace || char === ':' || char === ';' || char === ',') {
             break;
         }
     }
@@ -167,7 +167,7 @@ function prepareReplacementBefore(
     for (; pos>-1; pos--) {
         const char = code[pos];
         const charIsSpace = char === ' ' || char === '\t' || char === '\n';
-        if (charIsSpace || char === ':') {
+        if (charIsSpace || char === ':' || char === ';' || char === ',') {
             break;
         }
     }
