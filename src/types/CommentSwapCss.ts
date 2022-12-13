@@ -102,14 +102,22 @@ function prepareReplacementAfter(
     }
     const preservedSpaceEnd = pos;
 
-    // Step forwards through the code, character-by-character, to find the end
-    // position of the identifier or literal to replace.
+    // Step forwards through the code, character-by-character, to find the
+    // position of a special 'break' character, which delimits the replacement.
     for (; pos<len; pos++) {
-        const char = code[pos];
+        const c = code[pos];
+        if (c === '{' || // eg /* h1 =*/ div { color:red } => h1 { color:red }
+            c === ':' || // eg h1 { /* color =*/background:red } => h1 { color:red }
+            c === ';' || // eg h1 { color:/* red =*/blue; top:0 } => h1 { color:red; top:0 }
+            c === '}'    // eg h1 { color:/* red =*/blue } => h1 { color:red }
+        ) break;
+    }
+
+    // Wind backwards, to preserve any whitespace directly before the break character.
+    for (; pos>preservedSpaceEnd; pos--) {
+        const char = code[pos-1]; // note the `- 1`
         const charIsSpace = char === ' ' || char === '\t' || char === '\n';
-        if (charIsSpace || char === ':' || char === ';' || char === ',') {
-            break;
-        }
+        if (! charIsSpace) { break; }
     }
     const swapEnd = pos;
 
@@ -165,16 +173,24 @@ function prepareReplacementBefore(
     // Step backwards through the code, character-by-character, to find the
     // start position of the identifier or literal to replace.
     for (; pos>-1; pos--) {
-        const char = code[pos];
+        const c = code[pos];
+        if (c === '{' || // eg h1 { background/*= color */:red } => h1 { color:red }
+            c === ':' || // eg h1 { color:blue/*= red */ } => h1 { color:red }
+            c === ';' || // eg h1 { color:red; width/*= top */:0 } => h1 { color:red; top:0 }
+            c === '}'    // eg h1 { color:blue } div/*= h2 */ {} => h1 { color:red } h2 {}
+        ) break;
+    }
+
+    // Step forwards, to preserve any whitespace directly after the break character.
+    for (; pos<preservedSpaceBegin; pos++) {
+        const char = code[pos + 1]; // note the `+ 1`
         const charIsSpace = char === ' ' || char === '\t' || char === '\n';
-        if (charIsSpace || char === ':' || char === ';' || char === ',') {
-            break;
-        }
+        if (! charIsSpace) { break; }
     }
     const swapBegin = pos + 1;
 
     // Ensure there is something to replace.
-    if (swapBegin === preservedSpaceBegin) throw Error(`A '${CSKind[kind]
+    if (swapBegin === preservedSpaceBegin + 1) throw Error(`A '${CSKind[kind]
         }' Comment Swap has nothing before it to replace`);
 
     // Get the content (literal or variable) from inside the comment.

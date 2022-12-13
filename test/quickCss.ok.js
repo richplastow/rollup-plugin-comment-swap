@@ -72,14 +72,35 @@ test('quickCss() ok: Variable', t => {
 });
 
 test('quickCss() ok: CSS Selector', t => {
-    const comma1    = '/* h4, h3 =*/h1, h2 { color:red };';
-    const comma1Ok  = 'h4, h3, h2 { color:red };';
+    const comma1    = '/* h4, h3 =*/h1, h2   { color:red }';
+    const comma1ok  = 'h4, h3   { color:red }';
     const comma2    = 'a,p/*=q*/{}';
-    const comma2Ok  = 'a,q{}';
+    const comma2ok  = 'q{}';
     const comma3    = 'div/*?*/, span/*=*/ {}';
-    const comma3Ok  = 'div {}';
+    const comma3ok  = 'div {}';
 
-    t.is(commentSwap().transform(comma1, id), comma1Ok);
-    t.is(commentSwap().transform(comma2, id), comma2Ok);
-    t.is(commentSwap().transform(comma3, id), comma3Ok);
+    t.is(commentSwap().transform(comma1, id), comma1ok);
+    t.is(commentSwap().transform(comma2, id), comma2ok);
+    t.is(commentSwap().transform(comma3, id), comma3ok);
+
+    const id1    = ' /*  #prod  =*/  #dev{ color:red }';
+    const id1ok  = '   #prod{ color:red }';
+    const id2    = 'a{color:blue}  h2#dev   /*= h1#prod */ { color:red }';
+    const id2ok  = 'a{color:blue}  h1#prod    { color:red }';
+    const id3    = 'div/*?*/#dev/*=#prod*/ {}';
+    const id3ok  = 'div#prod {}';
+
+    t.is(commentSwap().transform(id1, id), id1ok);
+    t.is(commentSwap().transform(id2, id), id2ok);
+    t.is(commentSwap().transform(id3, id), id3ok);
+
+    //@TODO more selectors
+});
+
+test('quickCss() ok: CSS Properties', t => {
+    //@TODO properties
+});
+
+test('quickCss() ok: CSS Values', t => {
+    //@TODO values
 });
