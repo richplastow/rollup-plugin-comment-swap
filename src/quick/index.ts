@@ -16,7 +16,7 @@ export default function quick(
         case Filetype.Html:
             return quickHtml(code);
         case Filetype.Js:
-            return quickJs(code);
+            return quickJs(opts, code);
         default:
             throw Error(`no such filetype Filetype.'${filetype}'`);
     }

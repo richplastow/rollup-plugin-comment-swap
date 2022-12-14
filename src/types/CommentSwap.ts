@@ -1,8 +1,8 @@
-import { IndexKind } from 'typescript';
 import type { RollupCommentSwapOptions } from '../../types';
 import CSKind from './CommentSwapKind';
+import Filetype from './Filetype';
 
-export default class CommentSwapCss {
+export default class CommentSwap {
     replacement: string;
     swapBegin: number;
     swapEnd: number;
@@ -10,6 +10,7 @@ export default class CommentSwapCss {
     constructor(
         readonly commentBegin: number,
         readonly commentEnd: number,
+        readonly filetype: Filetype,
         readonly kind: CSKind,
     ) {}
 
@@ -17,7 +18,7 @@ export default class CommentSwapCss {
         opts: RollupCommentSwapOptions,
         code: string,
         prevKind: CSKind,
-        nextCommentSwap: CommentSwapCss | null,
+        nextCommentSwap: CommentSwap | null,
     ) {
         this.swapBegin = this.commentBegin;
         this.swapEnd = this.commentEnd;
@@ -41,7 +42,8 @@ export default class CommentSwapCss {
                         this.commentBegin,
                         this.commentEnd,
                         this.kind,
-                        code
+                        code,
+                        this.filetype,
                     );
                 break;
 
@@ -53,7 +55,8 @@ export default class CommentSwapCss {
                         this.commentBegin,
                         this.commentEnd,
                         this.kind,
-                        code
+                        code,
+                        this.filetype,
                     );
                 break;
 
@@ -64,6 +67,7 @@ export default class CommentSwapCss {
                         this.commentBegin,
                         this.commentEnd,
                         code,
+                        this.filetype,
                         nextCommentSwap,
                     );
                 break;
@@ -81,6 +85,7 @@ function prepareReplacementAfter(
     commentEnd: number,
     kind: CSKind.LiteralAfter | CSKind.VariableAfter,
     code: string,
+    filetype: Filetype,
 ): [ string, number ] {
     const len = code.length;
 
@@ -96,28 +101,39 @@ function prepareReplacementAfter(
     // Step forwards through the code, character-by-character, to find the end
     // position of any whitespace which should be preserved.
     for (; pos<len; pos++) {
-        const char = code[pos];
-        const charIsSpace = char === ' ' || char === '\t' || char === '\n';
-        if (! charIsSpace) { break; }
+        if (! charIsWhitespace(code[pos])) { break; }
     }
     const preservedSpaceEnd = pos;
 
     // Step forwards through the code, character-by-character, to find the
     // position of a special 'break' character, which delimits the replacement.
-    for (; pos<len; pos++) {
-        const c = code[pos];
-        if (c === '{' || // eg /* h1 =*/ div { color:red } => h1 { color:red }
-            c === ':' || // eg h1 { /* color =*/background:red } => h1 { color:red }
-            c === ';' || // eg h1 { color:/* red =*/blue; top:0 } => h1 { color:red; top:0 }
-            c === '}'    // eg h1 { color:/* red =*/blue } => h1 { color:red }
-        ) break;
+    switch (filetype) {
+        case Filetype.Css:
+            for (; pos<len; pos++) {
+                const c = code[pos];
+                if (c === '{' || // eg /* h1 =*/ div { color:red } => h1 { color:red }
+                    c === ':' || // eg h1 { /* color =*/background:red } => h1 { color:red }
+                    c === ';' || // eg h1 { color:/* red =*/blue; top:0 } => h1 { color:red; top:0 }
+                    c === '}'    // eg h1 { color:/* red =*/blue } => h1 { color:red }
+                ) break;
+            }
+            break;
+        case Filetype.Js:
+            for (; pos<len; pos++) {
+                const c = code[pos];
+                if (c === '(' || // eg function/* foo =*/ bar() {} => foo() {}
+                    c === '=' || // eg let /* foo =*/bar = "foo" => let foo = "foo"
+                    c === ')'    // eg function fn(/* foo =*/bar) {} => fn(foo) {}
+                ) break;
+            }
+            break;
+        default:
+            throw Error(`filetype '${Filetype[filetype]}' not supported`);
     }
 
     // Wind backwards, to preserve any whitespace directly before the break character.
     for (; pos>preservedSpaceEnd; pos--) {
-        const char = code[pos-1]; // note the `- 1`
-        const charIsSpace = char === ' ' || char === '\t' || char === '\n';
-        if (! charIsSpace) { break; }
+        if (! charIsWhitespace(code[pos - 1])) { break; } // note the `- 1`
     }
     const swapEnd = pos;
 
@@ -151,6 +167,7 @@ function prepareReplacementBefore(
     commentEnd: number,
     kind: CSKind.LiteralBefore | CSKind.VariableBefore,
     code: string,
+    filetype: Filetype,
 ): [ string, number ] {
     // Throw an exception if this Comment Swap begins the code.
     if (commentBegin === 0)
@@ -171,14 +188,29 @@ function prepareReplacementBefore(
     const preservedSpaceBegin = pos + 1;
 
     // Step backwards through the code, character-by-character, to find the
-    // start position of the identifier or literal to replace.
-    for (; pos>-1; pos--) {
-        const c = code[pos];
-        if (c === '{' || // eg h1 { background/*= color */:red } => h1 { color:red }
-            c === ':' || // eg h1 { color:blue/*= red */ } => h1 { color:red }
-            c === ';' || // eg h1 { color:red; width/*= top */:0 } => h1 { color:red; top:0 }
-            c === '}'    // eg h1 { color:blue } div/*= h2 */ {} => h1 { color:red } h2 {}
-        ) break;
+    // position of a special 'break' character, which delimits the replacement.
+    switch (filetype) {
+        case Filetype.Css:
+            for (; pos>-1; pos--) {
+                const c = code[pos];
+                if (c === '{' || // eg h1 { background/*= color */:red } => h1 { color:red }
+                    c === ':' || // eg h1 { color:blue/*= red */ } => h1 { color:red }
+                    c === ';' || // eg h1 { color:red; width/*= top */:0 } => h1 { color:red; top:0 }
+                    c === '}'    // eg h1 { color:blue } div/*= h2 */ {} => h1 { color:red } h2 {}
+                ) break;
+            }
+            break;
+        case Filetype.Js:
+            for (; pos>-1; pos--) {
+                const c = code[pos];
+                if (c === '(' || // eg function fn(bar/*= foo */) {} => fn(foo) {}
+                    c === '=' || // eg let foo = "bar"/*= "foo" */ => let foo = "foo"
+                    c === ')'    // eg @TODO add an example here
+                ) break;
+            }
+            break;
+        default:
+            throw Error(`filetype '${Filetype[filetype]}' not supported`);
     }
 
     // Step forwards, to preserve any whitespace directly after the break character.
@@ -218,7 +250,8 @@ function prepareReplacementTernary(
     commentBegin: number,
     commentEnd: number,
     code: string,
-    nextCS: CommentSwapCss | null,
+    filetype: Filetype,
+    nextCS: CommentSwap | null,
 ): [ string, number ] {
     const len = code.length;
 
@@ -312,4 +345,20 @@ function getCommentContent(
             sourceBegin} fails /^[$_a-z][$_a-z0-9]*$/i`);
 
     return content;
+}
+
+// Returns `true` if `char` is a W3C-defined whitespace character.
+// From www.w3.org/TR/2003/WD-CSS21-20030915/syndata.html 4.1.1:
+//     Only the characters "space" (Unicode code 32), "tab" (9), "line feed" (10),
+//     "carriage return" (13), and "form feed" (12) can occur in whitespace."
+function charIsWhitespace(
+    char: string,
+) {
+    // Short circuit for the usual case where `char` is not whitespace.
+    // eg the ASCII character '!' is greater than ' '.
+    if (char > ' ') return false;
+
+    // Test `char`. Start with "space" (the most commonly found), and end with
+    // "form feed" (the least commonly found).
+    return char===' ' || char==='\n' || char==='\t' || char==='\r' || char==='\f';
 }

@@ -97,10 +97,10 @@ test('quickCss() ok: CSS Selector', t => {
     //@TODO more selectors
 });
 
-test('quickCss() ok: CSS Properties', t => {
+test.skip('quickCss() ok: CSS Properties', t => {
     //@TODO properties
 });
 
-test('quickCss() ok: CSS Values', t => {
+test.skip('quickCss() ok: CSS Values', t => {
     //@TODO values
 });
