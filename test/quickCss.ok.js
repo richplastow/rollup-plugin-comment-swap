@@ -98,7 +98,7 @@ test('quickCss() ok: CSS Selector', t => {
     const class1ok   = 'ul.big.prod.ok { color:red }';
     const class2     = 'a{color:blue}\tul.big.dev.error/*=div.big.prod.ok*/{ color:red }';
     const class2ok   = 'a{color:blue}\tdiv.big.prod.ok{ color:red }';
-    const class3bad  = 'ul.big./*?*/dev./*=prod.*/ok {color:red}'; // css(css-identifierexpected), though browsers do accept it
+    const class3bad  = 'ul.big./*?*/dev./*=prod.*/ok {color:red}'; // css(css-identifierexpected), though browsers do display it
     const class3good = 'ul.big/*?*/.dev/*=.prod*/.ok {color:red}'; // this is the proper syntax
     const class3ok   = 'ul.big.prod.ok {color:red}';
 
@@ -128,10 +128,32 @@ test('quickCss() ok: CSS Selector', t => {
     t.is(commentSwap().transform(pseudo3, id), pseudo3ok);
 });
 
-test.skip('quickCss() ok: CSS Properties', t => {
-    //@TODO properties
+test('quickCss() ok: CSS Properties', t => {
+    const property1     = 'h1 { /* color =*/\f\nbackground-color \t\ :red }';
+    const property1ok   = 'h1 { \f\ncolor \t\ :red }';
+    const property2     = 'h1 {\r\tbackground-color\f\n/*=outline-color*/ :red }';
+    const property2ok   = 'h1 {\r\toutline-color\f\n :red }';
+    const property3bad  = 'h1 {/*?*/background/*=\toutline*/-color:red }'; // browsers do not display this 
+    const property3good = 'h1 {/*?*/background-color/*=\toutline-color*/:red }'; // this is the proper syntax
+    const property3ok   = 'h1 {\toutline-color:red }';
+
+    t.is(commentSwap().transform(property1, id), property1ok);
+    t.is(commentSwap().transform(property2, id), property2ok);
+    t.is(commentSwap().transform(property3bad, id), property3ok);
+    t.is(commentSwap().transform(property3good, id), property3ok);
 });
 
-test.skip('quickCss() ok: CSS Values', t => {
-    //@TODO values
+test('quickCss() ok: CSS Values', t => {
+    const value1     = 'h1 { color:/* red =*/\fblue; top:0 }';
+    const value1ok   = 'h1 { color:\fred; top:0 }';
+    const value2     = 'h1 { color:rgb(1,2,3)/*= red */ }';
+    const value2ok   = 'h1 { color:red }';
+    const value3bad  = 'h1 { color:pale/*?*/green/*=goldenrod*/ }'; // browsers do not display this
+    const value3good = 'h1 { color:/*?*/palegreen/*=palegoldenrod*/ }'; // this is the proper syntax
+    const value3ok   = 'h1 { color:palegoldenrod }';
+
+    t.is(commentSwap().transform(value1, id), value1ok);
+    t.is(commentSwap().transform(value2, id), value2ok);
+    t.is(commentSwap().transform(value3bad, id), value3ok);
+    t.is(commentSwap().transform(value3good, id), value3ok);
 });
