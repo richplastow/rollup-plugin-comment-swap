@@ -94,7 +94,38 @@ test('quickCss() ok: CSS Selector', t => {
     t.is(commentSwap().transform(id2, id), id2ok);
     t.is(commentSwap().transform(id3, id), id3ok);
 
-    //@TODO more selectors
+    const class1     = 'ul.big/*.prod.ok=*/.dev.error { color:red }';
+    const class1ok   = 'ul.big.prod.ok { color:red }';
+    const class2     = 'a{color:blue}\tul.big.dev.error/*=div.big.prod.ok*/{ color:red }';
+    const class2ok   = 'a{color:blue}\tdiv.big.prod.ok{ color:red }';
+    const class3bad  = 'ul.big./*?*/dev./*=prod.*/ok {color:red}'; // css(css-identifierexpected), though browsers do accept it
+    const class3good = 'ul.big/*?*/.dev/*=.prod*/.ok {color:red}'; // this is the proper syntax
+    const class3ok   = 'ul.big.prod.ok {color:red}';
+
+    t.is(commentSwap().transform(class1, id), class1ok);
+    t.is(commentSwap().transform(class2, id), class2ok);
+    t.is(commentSwap().transform(class3bad, id), class3ok);
+    t.is(commentSwap().transform(class3good, id), class3ok);
+
+    const misc1    = '/* x-prod =*/\f\r\t\na#b.c[d="e"]\n\t\r\f{ color:red }';
+    const misc2    = '\f\r\t\na#b.c[d="e"]\n\t\r\f/*= x-prod */{ color:red }';
+    const misc3    = '\f\r\t\n/*?*/a#b.c[d="e"]:hover/*=x-prod*/\n\t\r\f{ color:red }';
+    const miscok   = '\f\r\t\nx-prod\n\t\r\f{ color:red }';
+
+    t.is(commentSwap().transform(misc1, id), miscok);
+    t.is(commentSwap().transform(misc2, id), miscok);
+    t.is(commentSwap().transform(misc3, id), miscok);
+
+    const pseudo1    = '/* b, x-prod =*/a, x-dev:hover { color:red }';
+    const pseudo1ok  = 'b, x-prod:hover { color:red }';
+    const pseudo2    = '  input:\fhover >div\t\t/*= focus*/{ color:red }';
+    const pseudo2ok  = '  input:\ffocus\t\t{ color:red }';
+    const pseudo3    = 'input/*?*/:hover/*=.focusable:focus\f\r*/{ color:red }';
+    const pseudo3ok  = 'input.focusable:focus\f\r{ color:red }';
+
+    t.is(commentSwap().transform(pseudo1, id), pseudo1ok);
+    t.is(commentSwap().transform(pseudo2, id), pseudo2ok);
+    t.is(commentSwap().transform(pseudo3, id), pseudo3ok);
 });
 
 test.skip('quickCss() ok: CSS Properties', t => {

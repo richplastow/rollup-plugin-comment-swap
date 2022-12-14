@@ -101,7 +101,7 @@ function prepareReplacementAfter(
     // Step forwards through the code, character-by-character, to find the end
     // position of any whitespace which should be preserved.
     for (; pos<len; pos++) {
-        if (! charIsWhitespace(code[pos])) { break; }
+        if (! charIsWhitespace(code[pos])) break;
     }
     const preservedSpaceEnd = pos;
 
@@ -181,9 +181,7 @@ function prepareReplacementBefore(
     // Step backwards through the code, character-by-character, to find the
     // start position of any whitespace which should be preserved.
     for (; pos>-1; pos--) {
-        const char = code[pos];
-        const charIsSpace = char === ' ' || char === '\t' || char === '\n';
-        if (! charIsSpace) { break; }
+        if (! charIsWhitespace(code[pos])) break;
     }
     const preservedSpaceBegin = pos + 1;
 
@@ -215,9 +213,7 @@ function prepareReplacementBefore(
 
     // Step forwards, to preserve any whitespace directly after the break character.
     for (; pos<preservedSpaceBegin; pos++) {
-        const char = code[pos + 1]; // note the `+ 1`
-        const charIsSpace = char === ' ' || char === '\t' || char === '\n';
-        if (! charIsSpace) { break; }
+        if (! charIsWhitespace(code[pos + 1])) break; // note the `+ 1`
     }
     const swapBegin = pos + 1;
 
