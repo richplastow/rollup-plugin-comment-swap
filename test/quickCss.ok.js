@@ -157,3 +157,37 @@ test('quickCss() ok: CSS Values', t => {
     t.is(commentSwap().transform(value3bad, id), value3ok);
     t.is(commentSwap().transform(value3good, id), value3ok);
 });
+
+test('quickCss() ok: @import', t => {
+    const import1opts = { $:{ urlAndMedia:'url("prod.css") print, screen' } };
+    const import1     = '@import/* urlAndMedia $*/ url("dev.css") print;';
+    const import2opts = { $:{ importUrl:'@import url("prod.css")' } };
+    const import2     = '@import url("dev.css") /*$ importUrl */print, screen;';
+    const import3opts = { $:{ isDev:false, url:'url("prod.css")' } };
+    const import3     = '@import /* isDev ?*/url("dev.css")/*$ url */ print, screen;';
+    const importOk    = '@import url("prod.css") print, screen;';
+
+    t.is(commentSwap(import1opts).transform(import1, id), importOk);
+    t.is(commentSwap(import2opts).transform(import2, id), importOk);
+    t.is(commentSwap(import3opts).transform(import3, id), importOk);
+});
+
+test('quickCss() ok: @media', t => {
+    const media1opts = { $:{ property:'min-width' } };
+    const media1     = '@media screen and (/* property $*/min-height: 900px) { }';
+    const media2opts = { $:{ value:'900px' } };
+    const media2     = '@media screen and (min-width: 900px/*$ value */) { }';
+    const media3opts = { $:{ pdfMode:false, media:'screen' } };
+    const media3     = '@media /*pdfMode?*/print/*$media*/ and (min-width: 900px/*$ value */) { }';
+    const mediaOk    = '@media screen and (min-width: 900px) { }';
+
+    t.is(commentSwap(media1opts).transform(media1, id), mediaOk);
+    t.is(commentSwap(media2opts).transform(media2, id), mediaOk);
+    t.is(commentSwap(media3opts).transform(media3, id), mediaOk);
+});
+
+test('quickCss() ok: remove comments', t => {
+    const comments   = 'h1 { color:green /*?*//* green means go *//*=*/}';
+    const commentsOk = 'h1 { color:green }';
+    t.is(commentSwap().transform(comments, id), commentsOk);
+});
