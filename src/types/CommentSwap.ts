@@ -123,6 +123,7 @@ function prepareReplacementAfter(
                 const c = code[pos];
                 if (c === '(' || // eg function/* foo =*/ bar() {} => foo() {}
                     c === '=' || // eg let /* foo =*/bar = "foo" => let foo = "foo"
+                    c === ';' || // eg let foo = /* "foo" =*/"bar" ; => let foo = "foo" ;
                     c === ')'    // eg function fn(/* foo =*/bar) {} => fn(foo) {}
                 ) break;
             }
@@ -203,6 +204,7 @@ function prepareReplacementBefore(
                 const c = code[pos];
                 if (c === '(' || // eg function fn(bar/*= foo */) {} => fn(foo) {}
                     c === '=' || // eg let foo = "bar"/*= "foo" */ => let foo = "foo"
+                    c === ';' || // eg fn(); const /*= let */foo = "foo" => fn(); let foo = "foo"
                     c === ')'    // eg @TODO add an example here
                 ) break;
             }

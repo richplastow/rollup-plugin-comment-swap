@@ -41,18 +41,18 @@ test('quickCss() ok: Ternary Variable', t => {
     const ternaryFalseyConditionVariable =
         '/* falsey ?*/ h1 /*$ headingSpc */{ color:/*nonesuch?*/red /*$shadeSpc*/}';
     const ternaryTruthyConditionVariable =
-        '/* truthy ?*/ h2 /*$ headingSpc */{ color:/*?shade*/red/*$shade*/ }';
+        '/* truthy ?*/ h2 /*$ shade */{ color:/* shade ?*/blue/*$falsey*/ }';
     const ternaryVariableDoesNotExist =
         ' /* falsey?*/h2/*$ nonesuch */ { color:/* ?*/blue/*$nonesuch*/ }';
     const ternaryOk = ' h2 { color:blue }';
     const opts = {
-        $:{ heading:'h2', headingSpc:' h2 ', shade:'blue' , shadeSpc:'blue ' }
+        $:{ falsey:'', heading:'h2', headingSpc:' h2 ', shade:'blue' , shadeSpc:'blue ', truthy:[] }
     };
 
     t.is(commentSwap(opts).transform(ternaryEmptyConditionVariable, id), ternaryOk);
-    t.is(commentSwap({ $:{ falsey:'' }, ...opts }).transform(ternaryFalseyConditionVariable, id), ternaryOk);
-    t.is(commentSwap({ $:{ truthy:[] }, ...opts }).transform(ternaryTruthyConditionVariable, id), ternaryOk);
-    t.is(commentSwap({ $:{ falsey:'' }, ...opts }).transform(ternaryVariableDoesNotExist, id), ternaryOk);
+    t.is(commentSwap(opts).transform(ternaryFalseyConditionVariable, id), ternaryOk);
+    t.is(commentSwap(opts).transform(ternaryTruthyConditionVariable, id), ternaryOk);
+    t.is(commentSwap(opts).transform(ternaryVariableDoesNotExist, id), ternaryOk);
 });
 
 test('quickCss() ok: Variable', t => {
