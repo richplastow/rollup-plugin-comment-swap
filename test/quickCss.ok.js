@@ -21,7 +21,7 @@ test('quickCss() ok: Literal', t => {
 });
 
 test('quickCss() ok: Ternary Literal', t => {
-    const ternaryAlmostEmptyConditionLiteral = '/* \t\n ?*/ h1 /*= h2 */{ color:/*?*/red/*=blue*/ }';
+    const ternaryAlmostEmptyConditionLiteral = '/* \t\n ?*/ h1 /*= h2 */{ color:/* ?*/red/*=blue*/ }';
     const ternaryEmptyConditionLiteral = '/*?*/ h1 /*= h2 */{ color:/*?*/red/*=blue*/ }';
     const ternaryFalseyConditionLiteral = '/* falsey ?*/ h1 /*= h2 */{ color:blue }';
     const ternaryMissingConditionLiteral = '/* missing ?*/ h1 /*= h2 */{ color:blue }';
@@ -56,10 +56,10 @@ test('quickCss() ok: Ternary Variable', t => {
 });
 
 test('quickCss() ok: Variable', t => {
-    const variableAfter  = '/* heading $*/ h1 { color:/*shade$*/red }';
+    const variableAfter = '/* heading $*/ h1 { color:/*shade$*/red }';
     const variableBefore = ' h1/*$heading*/ { color:red /*$ shade */}';
-    const variableNonesuch  = '/* nonesuch $*/ h2 { color:blue /*$ nonesuch */}';
-    const variableNumeric  = ' h/* numeric $*/1 { color:blue }';
+    const variableNonesuch = '/* nonesuch $*/ h2 { color:blue /*$ nonesuch */}';
+    const variableNumeric = ' h/* numeric $*/1 { color:blue }';
     const variableOk = ' h2 { color:blue }';
     const opts = {
         $:{ heading:'h2', numeric:2, shade:'blue' }

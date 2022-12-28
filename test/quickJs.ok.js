@@ -56,10 +56,10 @@ test('quickJs() ok: Ternary Variable', t => {
 });
 
 test('quickJs() ok: Variable', t => {
-    const variableAfter  = 'fn();/* leftHand $*/ const bar =/*value$*/ "bar" ;';
+    const variableAfter = 'fn();/* leftHand $*/ const bar =/*value$*/ "bar" ;';
     const variableBefore = 'fn(); const/*$assignmentKeyword*/ foo = "bar" /*$ value */;';
-    const variableNonesuch  = 'fn();/* nonesuch $*/ let foo = "foo" /*$ nonesuch */;';
-    const variableNumeric  = 'let foo =/* numeric $*/ "bar"';
+    const variableNonesuch = 'fn();/* nonesuch $*/ let foo = "foo" /*$ nonesuch */;';
+    const variableNumeric = 'let foo =/* numeric $*/ "bar"';
     const variableOk = 'fn(); let foo = "foo" ;';
     const variableNumericOk = 'let foo = 123';
     const opts = {

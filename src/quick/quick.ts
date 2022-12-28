@@ -9,13 +9,6 @@ export default function quick(
     filetype: Filetype,
 ) {
     // @TODO Validate the arguments
-    // let CommentSwap;
-    // switch (filetype) {
-    //     case Filetype.Css: CommentSwap = CommentSwap; break;
-    //     case Filetype.Js: CommentSwap = CommentSwapJs; break;
-    //     case Filetype.Html: throw Error('@TODO CommentSwapHtml');
-    //     case Filetype.Other: throw Error('`filetype` must not be `Other`');
-    // }
 
     // Initialise `commentSwaps`, which will contain each CommentSwap instance.
     // Initialise `pos`, the current character position in `code`.
@@ -30,20 +23,39 @@ export default function quick(
     while (pos < len) {
 
         // Get the start position of the next multiline comment.
-        const commentBegin = code.indexOf('/*', pos);
+        const commentBegin = code.indexOf(
+            (filetype === Filetype.Html ? '<!--' : '/*'),
+            pos,
+        );
         if (commentBegin === -1) break; // no more multiline comments
-        pos = commentBegin + 2; // jump to the character after '/*'
+        pos = commentBegin + (filetype === Filetype.Html
+            ? 4 // jump to the character after '<!--'
+            : 2 // jump to the character after '/*'
+        );
 
         // Get the end position of the next multiline comment.
-        let commentEnd = code.indexOf('*/', pos);
+        let commentEnd = code.indexOf(
+            (filetype === Filetype.Html ? '-->' : '*/'),
+            pos,
+        );
         if (commentEnd === -1) break; // maybe a malformed multiline comment
-        commentEnd += 2; // the position after the '/'
-        pos = commentEnd; // jump to the character after '*/'
+        commentEnd += (filetype === Filetype.Html
+            ? 3 // the position after the '>'
+            : 2 // the position after the '/'
+        );
+        pos = commentEnd; // jump to the character after the '-->' or '*/'
 
-        // Treat /*=*/ as a LiteralBefore Comment Swap, with empty content.
-        const charBeforeCommentEnd = code[commentEnd-3];
-        const charAfterCommentBegin = code[commentBegin+2];
-        if (commentEnd === commentBegin + 5 && charAfterCommentBegin === '=') {
+        // Treat <!--=--> or /*=*/ as a LiteralBefore Comment Swap with no content.
+        const charAfterCommentBegin = code[
+            commentBegin + (filetype === Filetype.Html ? 4 : 2)
+        ];
+        const charBeforeCommentEnd = code[
+            commentEnd - (filetype === Filetype.Html ? 4 : 3)
+        ];
+        if (
+            charAfterCommentBegin === '=' &&
+            commentEnd === commentBegin + (filetype === Filetype.Html ? 8 : 5)
+        ) {
             commentSwaps.push(new CommentSwap(
                 commentBegin,
                 commentEnd,

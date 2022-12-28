@@ -14,7 +14,7 @@ export default function quick(
         case Filetype.Css:
             return quickCss(opts, code);
         case Filetype.Html:
-            return quickHtml(code);
+            return quickHtml(opts, code);
         case Filetype.Js:
             return quickJs(opts, code);
         default:

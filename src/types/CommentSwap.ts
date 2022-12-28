@@ -118,6 +118,14 @@ function prepareReplacementAfter(
                 ) break;
             }
             break;
+        case Filetype.Html:
+            for (; pos<len; pos++) {
+                const c = code[pos];
+                if (c === '<' || // eg @TODO example
+                    c === '>'    // eg @TODO example
+                ) break;
+            }
+            break;
         case Filetype.Js:
             for (; pos<len; pos++) {
                 const c = code[pos];
@@ -148,7 +156,11 @@ function prepareReplacementAfter(
 
     // Get the content (literal or variable) from inside the comment.
     const content = getCommentContent(
-        commentBegin + 2, commentEnd - 3, code, kind);
+        commentBegin + (filetype === Filetype.Html ? 4 : 2),
+        commentEnd - (filetype === Filetype.Html ? 4 : 3),
+        code,
+        kind,
+    );
 
     // If this Comment Swap is a Variable, retrieve it from `opts.$`.
     // Otherwise use the content literally returned by getCommentContent().
@@ -203,6 +215,14 @@ function prepareReplacementBefore(
                 ) break;
             }
             break;
+        case Filetype.Html:
+            for (; pos>-1; pos--) {
+                const c = code[pos];
+                if (c === '<' || // eg @TODO example
+                    c === '>'    // eg @TODO example
+                ) break;
+            }
+            break;
         case Filetype.Js:
             for (; pos>-1; pos--) {
                 const c = code[pos];
@@ -233,7 +253,11 @@ function prepareReplacementBefore(
 
     // Get the content (literal or variable) from inside the comment.
     const content = getCommentContent(
-        commentBegin + 3, commentEnd - 2, code, kind);
+        commentBegin + (filetype === Filetype.Html ? 5 : 3),
+        commentEnd - (filetype === Filetype.Html ? 3 : 2),
+        code,
+        kind,
+    );
 
     // If this Comment Swap is a Variable, retrieve it from `opts.$`.
     // Otherwise use the content literally returned by getCommentContent().
@@ -279,7 +303,11 @@ function prepareReplacementTernary(
 
     // Get the content from inside this Ternary Condition comment.
     const condition = getCommentContent(
-        commentBegin + 2, commentEnd - 3, code, CSKind.TernaryCondition);
+        commentBegin + (filetype === Filetype.Html ? 4 : 2),
+        commentEnd - (filetype === Filetype.Html ? 4 : 3),
+        code,
+        CSKind.TernaryCondition
+    );
 
     // Resolve the condition against the `$` object, from the plugin options.
     // If true, `replacement` is the code between the end of this Ternary Condition
@@ -294,8 +322,8 @@ function prepareReplacementTernary(
     // The condition is false, so get the content (literal or variable) from
     // inside the next Comment Swap.
     const content = getCommentContent(
-        nextCS.commentBegin + 3,
-        nextCS.commentEnd - 2,
+        nextCS.commentBegin + (filetype === Filetype.Html ? 5 : 3),
+        nextCS.commentEnd - (filetype === Filetype.Html ? 3 : 2),
         code,
         nextCS.kind,
         nextCS.kind === CSKind.LiteralBefore, // special case!
