@@ -111,20 +111,24 @@ function prepareReplacementAfter(
         case Filetype.Css:
             for (; pos<len; pos++) {
                 const c = code[pos];
-                if (c === '{' || // eg /* h1 =*/ div { color:red } => h1 { color:red }
-                    c === ':' || // eg h1 { /* color =*/background:red } => h1 { color:red }
-                    c === ';' || // eg h1 { color:/* red =*/blue; top:0 } => h1 { color:red; top:0 }
-                    c === '}'    // eg h1 { color:/* red =*/blue } => h1 { color:red }
+                if (c === ':' || // eg h1 { /* color =*/background:red }  -> h1 { color:red }
+                    c === ';' || // eg h1 { color:/* red =*/blue; top:0 } -> h1 { color:red; top:0 }
+                    c === '{' || // eg /* h1 =*/ div { color:red }        -> h1 { color:red }
+                    c === '}'    // eg h1 { color:/* red =*/blue }        -> h1 { color:red }
                 ) break;
             }
             break;
         case Filetype.Js:
             for (; pos<len; pos++) {
                 const c = code[pos];
-                if (c === '(' || // eg function/* foo =*/ bar() {} => foo() {}
-                    c === '=' || // eg let /* foo =*/bar = "foo" => let foo = "foo"
-                    c === ';' || // eg let foo = /* "foo" =*/"bar" ; => let foo = "foo" ;
-                    c === ')'    // eg function fn(/* foo =*/bar) {} => fn(foo) {}
+                if (c === '(' || // eg function/* foo =*/ bar() {}       -> function foo() {}
+                    c === ')' || // eg function fn(/* foo =*/bar) {}     -> function fn(foo) {}
+                    c === ',' || // eg add(/* 99 =*/1, 2)                -> add(99, 2)
+                    c === ':' || // eg { /* bar =*/foo:1 }               -> { bar:1 }
+                    c === ';' || // eg let foo = /* "foo" =*/"bar" ;     -> let foo = "foo" ;
+                    c === '=' || // eg let /* foo =*/bar = "foo"         -> let foo = "foo"
+                    c === '{' || // eg class /* Bar =*/Foo {}            -> class Bar {}
+                    c === '}'    // eg import { a, /* b =*/c } from "d"  -> import { a, b } from "d"
                 ) break;
             }
             break;
@@ -192,20 +196,24 @@ function prepareReplacementBefore(
         case Filetype.Css:
             for (; pos>-1; pos--) {
                 const c = code[pos];
-                if (c === '{' || // eg h1 { background/*= color */:red } => h1 { color:red }
-                    c === ':' || // eg h1 { color:blue/*= red */ } => h1 { color:red }
-                    c === ';' || // eg h1 { color:red; width/*= top */:0 } => h1 { color:red; top:0 }
-                    c === '}'    // eg h1 { color:blue } div/*= h2 */ {} => h1 { color:red } h2 {}
+                if (c === ':' || // eg h1 { color:blue/*= red */ }         -> h1 { color:red }
+                    c === ';' || // eg h1 { color:red; width/*= top */:0 } -> h1 { color:red; top:0 }
+                    c === '{' || // eg h1 { background/*= color */:red }   -> h1 { color:red }
+                    c === '}'    // eg h1 { color:blue } div/*= h2 */ {}   -> h1 { color:red } h2 {}
                 ) break;
             }
             break;
         case Filetype.Js:
             for (; pos>-1; pos--) {
                 const c = code[pos];
-                if (c === '(' || // eg function fn(bar/*= foo */) {} => fn(foo) {}
-                    c === '=' || // eg let foo = "bar"/*= "foo" */ => let foo = "foo"
-                    c === ';' || // eg fn(); const /*= let */foo = "foo" => fn(); let foo = "foo"
-                    c === ')'    // eg @TODO add an example here
+                if (c === '(' || // eg fn(bar/*= foo */)                    -> fn(foo)
+                    c === ')' || // eg (1+2)*3 /*= *4 */                    -> (1+2)*4
+                    c === ',' || // eg add(1, 2/*= 99 */)                   -> add(1, 99)
+                    c === ':' || // eg { foo:99/*= 1 */ }                   -> { foo:1 }
+                    c === ';' || // eg fn(); const /*= let */foo = "foo"    -> fn(); let foo = "foo"
+                    c === '=' || // eg let foo = "bar"/*= "foo" */          -> let foo = "foo"
+                    c === '{' || // eg item => { add/*= remove */(item) }   -> item => { remove(item) }
+                    c === '}'    // eg import { a } from "b"/*= from "c" */ -> import { a } from "c"
                 ) break;
             }
             break;
